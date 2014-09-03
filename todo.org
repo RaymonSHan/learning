@@ -1,0 +1,25 @@
+#+SEQ_TODO: REPORT(r) BUG(b@/!) KNOWNCAUSE(k) | FIXED(f@/!)
+#+SEQ_TODO: TODO(T!) | DONE(D@/!)3  CANCELED(C@/!)  
+* Total task
+** ubuntu learn
+*** emacs learn
+**** FIXED C-\ do not work
+     CLOSED: [2014-09-03 Wed 15:27]
+     - State "FIXED"      from "BUG"        [2014-09-03 Wed 15:27] \\
+       i tried to changed .pl, but not work, so i learn vim
+     - State "BUG"        from ""           [2014-09-03 Wed 15:26] \\
+       C-\ do not work for eim, while without evil, in ChenBing's emacs config
+       
+*** org learn
+
+*** vim learn
+*** git learn
+*** os learn
+*** gcc learn
+** kinect learn
+*** dx learn
+*** kinect
+** contextpad
+*** occiiocp
+*** contextpad
+** office task
