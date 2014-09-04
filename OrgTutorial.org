@@ -1,0 +1,33 @@
+* Task
+** DONE Start new org file for tutorail
+   CLOSED: [2014-09-04 Thu 13:28]
+** DONE Outline document
+   CLOSED: [2014-09-04 Thu 13:58]
+** TODO Write introduction
+   SCHEDULED: <2014-09-04 Thu>
+
+* Step
+** DONE following [[http://orgmode.org/worg/org-tutorials/orgtutorial_dto.html][David's org-mode tutorial]]
+   CLOSED: [2014-09-04 Thu 15:03]
+*** learn link mode for both http and file, such as [[~/.emacs.d/init.el][emacs init file]] [[~/.emacs.d/init-org.el][org-mode init file]]
+the link can be open by C-c C-o
+insert link can by C-c C-l, or type [[][]]
+*** learn agenda file 
+C-c a for enter, t for list file, in list t for change mark
+C-c C-s in TODO line, for choice scheduling. C-c a a for list scheduling. l for log in list
+*** should follow [[http://orgmode.org/manual/index.html][org-mode manual]] and [[http://orgmode.org/worg/][worg home page]] for deatil
+** DONE install w3m, apt-get it
+   CLOSED: [2014-09-04 Thu 15:30]
+** TODO following [[http://members.optusnet.com.au/~charles57/GTD/gtd_workflow.html][Charles step]]
+** TODO following [[http://newartisans.com/2007/08/using-org-mode-as-a-day-planner/][John step]]
+
+** TODO 野炊需要物品
+   SCHEDULED: <2014-09-06 Sat>
+- [] 桶装水
+- [] 吊子
+- [] 肉
+- [] 烧烤螿
+- [] 调料
+- [] 烤炉
+- [] 炭
+- [] 锡纸

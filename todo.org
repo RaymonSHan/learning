@@ -1,25 +1,70 @@
-#+SEQ_TODO: REPORT(r) BUG(b@/!) KNOWNCAUSE(k) | FIXED(f@/!)
-#+SEQ_TODO: TODO(T!) | DONE(D@/!)3  CANCELED(C@/!)  
-* Total task
-** ubuntu learn
-*** emacs learn
-**** FIXED C-\ do not work
+#+SEQ_TODO: REPORT(r) BUG(b@/!) | KNOWNCAUSE(k!) FIXED(f@/!)
+#+SEQ_TODO: TODO(t!) | DONE(d@/!)  CANCELED(c@/!)  
+
+* ubuntu learn
+** emacs learn
+*** FIXED C-\ do not work
      CLOSED: [2014-09-03 Wed 15:27]
      - State "FIXED"      from "BUG"        [2014-09-03 Wed 15:27] \\
-       i tried to changed .pl, but not work, so i learn vim
+       i tried to changed .el, but not work, so i learn vim
      - State "BUG"        from ""           [2014-09-03 Wed 15:26] \\
        C-\ do not work for eim, while without evil, in ChenBing's emacs config
        
-*** org learn
+** org learn
 
-*** vim learn
-*** git learn
-*** os learn
-*** gcc learn
-** kinect learn
-*** dx learn
-*** kinect
+** vim learn
+** git learn
+** os learn
+*** KNOWNCAUSE find in file : grep "text" filename
+    - State "KNOWNCAUSE" from ""           [2014-09-03 Wed 16:24]
+*** FIXED swap capslock and lctrl
+    CLOSED: [2014-09-03 Wed 22:18]
+    - State "FIXED"      from "KNOWNCAUSE" [2014-09-04 Thu 00:08] \\
+      i tried xmodmap, it work for command line, but i do not found how to make it startup, at last i use tweak.
+    - State "KNOWNCAUSE" from ""           [2014-09-03 Wed 22:18]
+** gcc learn
+* kinect learn
+** dx learn
+** kinect
+* contextpad
+** occiiocp
 ** contextpad
-*** occiiocp
-*** contextpad
-** office task
+* office task
+* test task
+** DONE test one[100%] [2/2]
+   CLOSED: [2014-09-03 Wed 21:18]
+*** DONE try one [1/1]
+    CLOSED: [2014-09-03 Wed 21:18]
+    - State "TODO"       from "CANCELED"   [2014-09-03 Wed 21:16]
+    - State "CANCELED"   from "TODO"       [2014-09-03 Wed 21:13]
+    - State "TODO"       from ""           [2014-09-03 Wed 21:08]
+**** DONE try
+     CLOSED: [2014-09-03 Wed 21:17]
+     - State "TODO"       from ""           [2014-09-03 Wed 21:17]
+*** FIXED try two
+    CLOSED: [2014-09-03 Wed 21:09]
+    - State "FIXED"      from "TODO"       [2014-09-03 Wed 21:09] \\
+      fixed
+    - State "TODO"       from ""           [2014-09-03 Wed 21:09]
+** DONE test for test
+   CLOSED: [2014-09-03 Wed 21:10]
+   - State "DONE(D@/!)3" from "CANCELED"   [2014-09-03 Wed 21:12]
+   - State "CANCELED"   from "TODO"       [2014-09-03 Wed 21:10]
+   - State "TODO"       from "REPORT"     [2014-09-03 Wed 21:07]
+*** REPORT 
+** REPORT
+** REPORT 
+** FIXED 
+   CLOSED: [2014-09-04 Thu 14:54]
+   - State "FIXED"      from "REPORT"     [2014-09-04 Thu 14:54] \\
+     by agends
+** REPORT 
+** REPORT 
+** REPORT 
+* test tesk end
+* REPORT
+* REPORT 
+* REPORT
+* 
+* REPORT
+* 
