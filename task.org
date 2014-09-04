@@ -1,3 +1,0 @@
-#+SEQ_TODO: REPORT(r) BUG(b) KNOWNCAUSE(k) | FIXED(f)
-#+SEQ_TODO: TODO(T!) | DONE(D@)3  CANCELED(C@/!)  
-* Total task
