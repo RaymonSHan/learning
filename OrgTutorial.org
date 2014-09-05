@@ -1,5 +1,5 @@
 * Task
-** DONE Start new org file for tutorail
+** DONE Start new org file for tutorial
    CLOSED: [2014-09-04 Thu 13:28]
 ** DONE Outline document
    CLOSED: [2014-09-04 Thu 13:58]
@@ -18,8 +18,49 @@ C-c C-s in TODO line, for choice scheduling. C-c a a for list scheduling. l for 
 *** should follow [[http://orgmode.org/manual/index.html][org-mode manual]] and [[http://orgmode.org/worg/][worg home page]] for deatil
 ** DONE install w3m, apt-get it
    CLOSED: [2014-09-04 Thu 15:30]
-** TODO following [[http://members.optusnet.com.au/~charles57/GTD/gtd_workflow.html][Charles step]]
-** TODO following [[http://newartisans.com/2007/08/using-org-mode-as-a-day-planner/][John step]]
+
+** DONE following [[http://blog.sina.com.cn/s/blog_559f6ffc01000aj1.html][yunmoon vi totorial]]
+   CLOSED: [2014-09-05 Fri 14:28]
+*** edit mode
+into insert mode i I a A o O
+change one char r, R is hard to control
+s : x i; S : dd
+u : undo, U : ? undo oneline
+*** cursor move
+0 : home, ^ : first char, b : last word, w : next word head, e : next word end, $ : end
+M : middle windows line, H, W : NO
+C-b : page up, C-f : page down
+n (num) G : goto num line
+f (char) : next char, F (char) : last char, t T may not use, 
+*** search
+/str, ?str : forward, backward search
+n, N : again, otherward again
+*** edit command
+v : entry mark mode
+mode. d : cut, y : copy, p : paste
+place. hjkl 0^bwe$ (){}, or search
+*** other
+C-o : do one commamd
+
+** DONE following emacs tutorial again
+   CLOSED: [2014-09-05 Fri 16:41]
+*** cursor move
+C-v, M-v only in insert mode, C-M-v, C-l all ok
+C-a, C-b, C-f C-e only in insert mode, C-p, C-n all NOT
+M-<, M-> for begin and end of all, all ok
+C-e : scroll down, C-y scorll up, in command mode (NOT default)
+*** edit delete
+C-k : delete to end, all ok, or d $
+M-DEL : delete last word, M-d : delete next word, all ok, or d b, d e 
+C-/ : in insert mode, u in command mode
+M-y : paste list (UNKONW yet)
+*** file
+C-x C-f, C-x C-s, C-x C-c, all ok
+C-x 4 C-f : open in another windows
+*** windows
+C-x o : switch window
+
+** TODO following [[http://newartisans.com/2007/08/using-org-mode-as-a-day-planner/][John step]] org-mode
 
 ** TODO 野炊需要物品
    SCHEDULED: <2014-09-06 Sat>
@@ -31,3 +72,6 @@ C-c C-s in TODO line, for choice scheduling. C-c a a for list scheduling. l for 
 - [] 烤炉
 - [] 炭
 - [] 锡纸
+
+** TODO following [[http://members.optusnet.com.au/~charles57/GTD/gtd_workflow.html][Charles step]] this is a example for org tag setting. may read later.
+
