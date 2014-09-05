@@ -19,7 +19,7 @@ C-c C-s in TODO line, for choice scheduling. C-c a a for list scheduling. l for 
 ** DONE install w3m, apt-get it
    CLOSED: [2014-09-04 Thu 15:30]
 
-** DONE following [[http://blog.sina.com.cn/s/blog_559f6ffc01000aj1.html][yunmoon vi totorial]]
+** DONE following [[http://blog.sina.com.cn/s/blog_559f6ffc01000aj1.html][yunmoon vi tutorial]]
    CLOSED: [2014-09-05 Fri 14:28]
 *** edit mode
 into insert mode i I a A o O
@@ -40,8 +40,7 @@ v : entry mark mode
 mode. d : cut, y : copy, p : paste
 place. hjkl 0^bwe$ (){}, or search
 *** other
-C-o : do one commamd
-
+    C-o : do one comma
 ** DONE following emacs tutorial again
    CLOSED: [2014-09-05 Fri 16:41]
 *** cursor move
@@ -59,6 +58,42 @@ C-x C-f, C-x C-s, C-x C-c, all ok
 C-x 4 C-f : open in another windows
 *** windows
 C-x o : switch window
+
+** TODO following [[http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000][git tutorial from MiaoXuefeng]]
+*** init
+git config --global user.name "Raymon SHan"
+git config --global user.email "quickhorse77@gmail.com"
+git init
+*** add/delete file and commit
+git add filename
+git rm filename
+git commit -m "sometext"
+git status : view file status, git log : list all version
+*** back to version
+git reset --hard [ HEAD | HEAD^^ | HEAD~20 | number ] : back commit to stage
+git checkout -- filename : back to last add or commit : back stage to working
+*** set github for first time
+git remote add origin https://github.com/RaymonSHan/learning.git
+git push -u origin master
+git clone https://github.com/RaymonSHan/learning.git
+*** branch
+git branch test : create branch
+git checkout test : switch to branch
+git checkout -b test : create and switch to branch
+git branch : show branch
+git branch -d test : delete branch
+git merge test : merge branch
+git stash [ | apply | pop | list ] : save temp , restore temp, restore and delete, list
+git delete [ -D ] test : D means force
+*** push to remote
+git push origin master
+
+
+
+
+
+
+** TODO following [[http://www.gnu.org/software/emacs/tour/][gnu emacs tutorial]]
 
 ** TODO following [[http://newartisans.com/2007/08/using-org-mode-as-a-day-planner/][John step]] org-mode
 
