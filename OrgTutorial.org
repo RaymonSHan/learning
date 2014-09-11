@@ -1,5 +1,5 @@
 
-* Step
+* Step follow CB
 ** DONE following [[http://orgmode.org/worg/org-tutorials/orgtutorial_dto.html][David's org-mode tutorial]]
    CLOSED: [2014-09-04 Thu 15:03]
 *** learn link mode for both http and file, such as [[~/.emacs.d/init.el][emacs init file]] [[~/.emacs.d/init-org.el][org-mode init file]]
@@ -11,7 +11,6 @@ C-c C-s in TODO line, for choice scheduling. C-c a a for list scheduling. l for 
 *** should follow [[http://orgmode.org/manual/index.html][org-mode manual]] and [[http://orgmode.org/worg/][worg home page]] for deatil
 ** DONE install w3m, apt-get it
    CLOSED: [2014-09-04 Thu 15:30]
-
 ** DONE following [[http://blog.sina.com.cn/s/blog_559f6ffc01000aj1.html][yunmoon vi tutorial]]
    CLOSED: [2014-09-05 Fri 14:28]
 *** edit mode
@@ -83,7 +82,6 @@ git stash [ | apply | pop | list ] : save temp , restore temp, restore and delet
 git delete [ -D ] test : D means force
 *** push to remote
 git push origin master
-
 ** DONE following [[http://emacser.com/org-mode-yupeng.htm][chinese emacs site for org-mode]]
    CLOSED: [2014-09-08 Mon 10:38]
 *** move between title
@@ -96,19 +94,39 @@ C-c C-u : up level title
 |- | 
 TAB : refit
 
-** TODO install cedet
-*** install following [[http://cedet.sourceforge.net/setup.shtml][cedet sourceforge]]
+* My do myself .emacs.d
+** DONE install cedet following [[http://cedet.sourceforge.net/setup.shtml][cedet sourceforge]]
+   CLOSED: [2014-09-10 Wed 11:32]
 download [[http://nchc.dl.sourceforge.net/project/cedet/cedet/cedet-1.1.tar.gz][cedet v1.1]]
 unzip
 make EMACS=emacs
-add following four line to init.el
+add following four lines to init-cedet.el
   (load-file "~/.emacs.d/cedet-1.1/common/cedet.el")
   (global-ede-mode 1)                      ; Enable the Project management system
   (semantic-load-enable-code-helpers)      ; Enable prototype help and smart completion 
   (global-srecode-minor-mode 1)            ; Enable template insertion menu
-*** follow [[http://www.randomsample.de/cedetdocs/ede/index.html][emacs development environment]]
+** DONE follow [[http://www.randomsample.de/cedetdocs/ede/index.html][emacs development environment]] quick start. it should be read again
+   CLOSED: [2014-09-11 Thu 13:00]
 C-x h for dired windows in emacs
-*** follow [[http://alexott.net/en/writings/emacs-devenv/EmacsCedetOld.html][Alex Ott about cedet]] for v1.1
+should install autoconf & libtool & g++ via apt-get
+change configure.ac follow [[http://www.gnu.org/software/automake/manual/automake.html#Modernize-AM_005fINIT_005fAUTOMAKE-invocation][autoconf tutorial]]
+just following, insert AM_CPPFLAGS, -I../include, run in main.cpp buffer
+** DONE install ecb, the ide view of cedet
+   CLOSED: [2014-09-11 Thu 16:12]
+download [[http://ecb.sourceforge.net/cvs_snapshots/ecb.tar.gz][ecb v2.40]]
+add following two lines to init-ecb.el
+  (add-to-list 'load-path "~/.emacs.d/ecb-snap")
+  (require 'ecb)
+add following two lines before (require 'ecb), following [[https://bugs.debian.org/cgi-bin/bugreport.cgi?bug%3D729865][ecb bug]]
+  (setq stack-trace-on-error t)
+  (setq ecb-version-check nil)
+** TODO install smex
+   CLOSED: [2014-09-11 Thu 16:29]
+download from [[https://github.com/nonsequitur/smex][smex home]]
+just follow it, for little config
+** TODO follow [[http://alexott.net/en/writings/emacs-devenv/EmacsCedetOld.html][Alex Ott about cedet]] for v1.1
+another way for make, same for make EMACS=emacs
+  emacs -Q -nw -l cedet-build.el -f cedet-build (in terminal mode),
 add following two line
   (load-file "~/.emacs.d/cedet-1.1/semantic/semantic-ia.el")
   (load-file "~/.emacs.d/cedet-1.1/semantic/bovine/semantic-gcc.el")
@@ -118,7 +136,6 @@ add addition header dir
 ** TODO following [[http://mij.oltrelinux.com/devel/autoconf-automake/][autoconf step]]
 *** $ autoscan
 *** $ mv configure.scan configure.ac 
-
 
 ** TODO following [[http://www.gnu.org/software/autoconf/manual/autoconf.html][full autoconf manual]] it is very long
 
