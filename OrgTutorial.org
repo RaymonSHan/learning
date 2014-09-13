@@ -1,5 +1,4 @@
-
-* Step follow CB
+* DONE Step follow CB
 ** DONE following [[http://orgmode.org/worg/org-tutorials/orgtutorial_dto.html][David's org-mode tutorial]]
    CLOSED: [2014-09-04 Thu 15:03]
 *** learn link mode for both http and file, such as [[~/.emacs.d/init.el][emacs init file]] [[~/.emacs.d/init-org.el][org-mode init file]]
@@ -120,10 +119,49 @@ add following two lines to init-ecb.el
 add following two lines before (require 'ecb), following [[https://bugs.debian.org/cgi-bin/bugreport.cgi?bug%3D729865][ecb bug]]
   (setq stack-trace-on-error t)
   (setq ecb-version-check nil)
-** TODO install smex
+** DONE install smex
    CLOSED: [2014-09-11 Thu 16:29]
 download from [[https://github.com/nonsequitur/smex][smex home]]
 just follow it, for little config
+** DONE install ido
+   CLOSED: [2014-09-12 Fri 14:00]
+download from [[http://repo.or.cz/w/emacs.git/blob_plain/HEAD:/lisp/ido.el][ido.el]]. just add few
+C-s for next, C-r for prev. // for root, ~/ for home
+** DONE install translate
+   CLOSED: [2014-09-12 Fri 14:56]
+follow [[http://blog.chinaunix.net/uid/20263484/cid-8773-list-1.html][blog in chinaunix]], download from  [[https://github.com/zhenze12345/youdao.el][translate plugin by youdao]]
+get account for [[http://fanyi.youdao.com/openapi?path%3Ddata-mode][youdao]] API key:1665991319, keyfrom:RaymonSHan-GIT, site:http://github.com/RaymonSHan
+install [[http://www.emacswiki.org/emacs/download/pos-tip.el][pos-tip.el]] requested
+install [[https://github.com/zhenze12345/youdao.el/blob/master/youdao.el][youdao.el]]
+very good thank i expect, i bind to "C-M-y"
+** DONE install eim
+   CLOSED: [2014-09-12 Fri 15:28]
+download from [[https://github.com/wenbinye/emacs-eim][eim github]], little config, C-\ for switch. C-n for next page
+** DONE install color-theme
+   CLOSED: [2014-09-13 Sat 19:38]
+download from [[http://www.nongnu.org/color-theme/][color-theme home]], add few config.
+follow [[http://www.emacswiki.org/ColorTheme][color-theme emacswiki]], I choose classic, font:"DejaVu Sans Mono" height:105
+download [[https://raw.githubusercontent.com/vic/color-theme-buffer-local/master/color-theme-buffer-local.el][color-theme-buffer-local]], choose robin-hood for org, ??? NO EFFECT ???
+set global-linum-mode, display-time-mode
+** DONE install [[https://github.com/magnars/expand-region.el][expand-region]] simple and useful
+   CLOSED: [2014-09-13 Sat 20:21]
+C-= for mark, C-g for cancel mark.
+** DONE change org-mode setting org-log-done follow [[http://orgmode.org/manual/Closing-items.html][org manual]]
+   CLOSED: [2014-09-13 Sat 22:59]
+it change behavior since i update org-mode
+
+** DONE install w3m 
+   CLOSED: [2014-09-14 Sun 00:44]
+download development version from [[http://emacs-w3m.namazu.org/][emacs-w3m home]] via cvs, NOT the zip.
+autoconf, ./configure, make, sudo make install
+following [[http://www.emacswiki.org/emacs/emacs-w3m][w3m emacswiki]]
+found in other place, for open new tab and display image default.
+
+** DONE install flycheck
+   CLOSED: [2014-09-14 Sun 01:47]
+download dash from [[https://github.com/magnars/dash.el][dash in github]], flycheck require it.
+download from [[https://github.com/flycheck/flycheck][flycheck in github]], only add require
+add (global-flycheck-mode 1)
 ** TODO follow [[http://alexott.net/en/writings/emacs-devenv/EmacsCedetOld.html][Alex Ott about cedet]] for v1.1
 another way for make, same for make EMACS=emacs
   emacs -Q -nw -l cedet-build.el -f cedet-build (in terminal mode),
@@ -151,3 +189,5 @@ add addition header dir
 
 ** TODO following [[http://members.optusnet.com.au/~charles57/GTD/gtd_workflow.html][Charles step]] this is a example for org tag setting. may read later.
 
+API key：1665991319
+keyfrom：RaymonSHan-GIT
