@@ -162,6 +162,41 @@ found in other place, for open new tab and display image default.
 download dash from [[https://github.com/magnars/dash.el][dash in github]], flycheck require it.
 download from [[https://github.com/flycheck/flycheck][flycheck in github]], only add require
 add (global-flycheck-mode 1)
+** DONE install smartpaners
+   CLOSED: [2014-09-14 Sun 14:56]
+download from [[https://github.com/Fuco1/smartparens][smartpaners github]], add require.
+add (smartpanes-global-mode 1)
+** DONE learning eshell, pause now
+   CLOSED: [2014-09-14 Sun 20:50]
+should read [[http://www.masteringemacs.org/articles/2010/12/13/complete-guide-mastering-eshell/][master eshell by mickey]]
+cd =, cd - for eshell, when reading eshellautojump
+** DONE install DocViewMode
+   CLOSED: [2014-09-14 Sun 22:13]
+install ghostscript and xpdf by apt-get
+can open .pdf file
+** TODO install magit
+download [[https://github.com/magit/git-modes][git-modes]]
+following [[https://github.com/magit/magit#installation][magit in github]]
+* Learn emacs more
+** DONE reading [[http://blog.chinaunix.net/uid-26185912-id-3334793.html][something about emacs]]
+   CLOSED: [2014-09-14 Sun 21:32]
+C-x C-w : save as
+C-x i : insert file
+C-t, M-t, C-x C-t : switch two letters, words, lines
+M-u : to UPCASE, M-c : Upcase first
+** DONE reading [[http://www.cnblogs.com/holbrook/tag/emacs/][14 paper for emacs in chinese]]
+   CLOSED: [2014-09-14 Sun 22:15]
+M-p, M-n : scroll command in M-x mod
+T : turn on/off image in w3m for all buffer, t : for current place
+should read it more about org
+
+* should do things
+** TODO may install tab bar
+** TODO following [[http://www.gnu.org/software/autoconf/manual/autoconf.html][full autoconf manual]] it is very long
+** TODO may install git
+** TODO may install cscope
+
+
 ** TODO follow [[http://alexott.net/en/writings/emacs-devenv/EmacsCedetOld.html][Alex Ott about cedet]] for v1.1
 another way for make, same for make EMACS=emacs
   emacs -Q -nw -l cedet-build.el -f cedet-build (in terminal mode),
@@ -171,23 +206,13 @@ add following two line
 add addition header dir
   (semantic-add-system-include "~/exp/include/boost_1_37" 'c++-mode)
 
-** TODO following [[http://mij.oltrelinux.com/devel/autoconf-automake/][autoconf step]]
-*** $ autoscan
-*** $ mv configure.scan configure.ac 
-
 ** TODO following [[http://www.gnu.org/software/autoconf/manual/autoconf.html][full autoconf manual]] it is very long
-
-** TODO following [[http://emacser.com/org-mode.htm][chinese emacs site for org-mode-2]]
-
 ** TODO following [[http://www.gnu.org/software/emacs/tour/][gnu emacs tutorial]]
 
-** TODO following [[http://newartisans.com/2007/08/using-org-mode-as-a-day-planner/][John step]] org-mode
 
+* none of work
 ** DONE 野炊需要物品
    CLOSED: [2014-09-06 Sat 23:57] SCHEDULED: <2014-09-06 Sat>
 桶装水 吊子 肉 烧烤螿 调料 烤炉 炭 锡纸
 
-** TODO following [[http://members.optusnet.com.au/~charles57/GTD/gtd_workflow.html][Charles step]] this is a example for org tag setting. may read later.
 
-API key：1665991319
-keyfrom：RaymonSHan-GIT
