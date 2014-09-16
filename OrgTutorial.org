@@ -1,98 +1,94 @@
-* DONE Step follow CB
-** DONE following [[http://orgmode.org/worg/org-tutorials/orgtutorial_dto.html][David's org-mode tutorial]]
-   CLOSED: [2014-09-04 Thu 15:03]
-*** learn link mode for both http and file, such as [[~/.emacs.d/init.el][emacs init file]] [[~/.emacs.d/init-org.el][org-mode init file]]
-the link can be open by C-c C-o
-insert link can by C-c C-l, or type [[][]]
-*** learn agenda file 
-C-c a for enter, t for list file, in list t for change mark
-C-c C-s in TODO line, for choice scheduling. C-c a a for list scheduling. l for log in list
-*** should follow [[http://orgmode.org/manual/index.html][org-mode manual]] and [[http://orgmode.org/worg/][worg home page]] for deatil
+* DONE Step follow CB 
+** DONE following [[http://orgmode.org/worg/org-tutorials/orgtutorial_dto.html][David's org-mode tutorial]] 
+   CLOSED: [2014-09-04 Thu 15:03] 
+*** learn link mode 
+for both http and file, such as [[~/.emacs.d/init.el][emacs init file]] [[~/.emacs.d/init-org.el][org-mode init file]] 
+the link can be open by C-c C-o insert link can by C-c C-l, or type [[][]] 
+*** learn agenda file
+C-c a for enter, t for list file, 
+in list t for change mark C-c C-s in TODO line, for choice scheduling. 
+C-c a a for list scheduling. l for log in list 
+*** should follow [[http://orgmode.org/manual/index.html][org-mode manual]] 
+and [[http://orgmode.org/worg/][worg home page]] for deatil 
 ** DONE install w3m, apt-get it
-   CLOSED: [2014-09-04 Thu 15:30]
-** DONE following [[http://blog.sina.com.cn/s/blog_559f6ffc01000aj1.html][yunmoon vi tutorial]]
-   CLOSED: [2014-09-05 Fri 14:28]
-*** edit mode
-into insert mode i I a A o O
-change one char r, R is hard to control
-s : x i; S : dd
-u : undo, U : ? undo oneline
-*** cursor move
-0 : home, ^ : first char, b : last word, w : next word head, e : next word end, $ : end
-M : middle windows line, H, W : NO
-C-b : page up, C-f : page down
-n (num) G : goto num line
+   CLOSED: [2014-09-04 Thu 15:30] 
+** DONE following [[http://blog.sina.com.cn/s/blog_559f6ffc01000aj1.html][yunmoon vi tutorial]] 
+   CLOSED: [2014-09-05 Fri 14:28] 
+*** edit mode 
+into insert mode i I a A o O 
+change one char r, R is hard to control 
+s : x i; S : dd u : undo, U : ? undo oneline 
+*** cursor move 
+0 : home, ^ : first char, b : last word, w : next word head, e : next word end, $ : end 
+M : middle windows line, H, W : NO 
+C-b : page up, C-f : page down n (num) 
+G : goto num line 
 f (char) : next char, F (char) : last char, t T may not use, 
-*** search
-/str, ?str : forward, backward search
-n, N : again, otherward again
-*** edit command
-v : entry mark mode
-mode. d : cut, y : copy, p : paste
-place. hjkl 0^bwe$ (){}, or search
-*** other
-    C-o : do one comma
-** DONE following emacs tutorial again
-   CLOSED: [2014-09-05 Fri 16:41]
-*** cursor move
-C-v, M-v only in insert mode, C-M-v, C-l all ok
-C-a, C-b, C-f C-e only in insert mode, C-p, C-n all NOT
-M-<, M-> for begin and end of all, all ok
-C-e : scroll down, C-y scorll up, in command mode (NOT default)
-*** edit delete
-C-k : delete to end, all ok, or d $
+*** search 
+/str, ?str : forward, backward search 
+n, N : again, otherward again 
+*** edit command 
+v : entry mark mode mode. d : cut, y : copy, p : paste 
+place. hjkl 0^bwe$ (){}, or search 
+*** other 
+C-o : do one comma 
+** DONE following emacs tutorial again 
+   CLOSED: [2014-09-05 Fri 16:41] 
+*** cursor move 
+C-v, M-v only in insert mode, C-M-v, C-l all ok 
+C-a, C-b, C-f C-e only in insert mode, C-p, C-n all NOT 
+M-<, M-> for begin and end of all, all ok 
+C-e : scroll down, C-y scorll up, in command mode (NOT default) 
+*** edit 
+delete C-k : delete to end, all ok, or d $ 
 M-DEL : delete last word, M-d : delete next word, all ok, or d b, d e 
-C-/ : in insert mode, u in command mode
-M-y : paste list (UNKONW yet)
-*** file
-C-x C-f, C-x C-s, C-x C-c, all ok
-C-x 4 C-f : open in another windows
-*** windows
-C-x o : switch window
-
-** DONE following [[http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000][git tutorial from MiaoXuefeng]]
-   CLOSED: [2014-09-06 Sat 02:07]
-*** init
-git config --global user.name "Raymon SHan"
-git config --global user.email "quickhorse77@gmail.com"
-git init
-*** add/delete file and commit
-git add filename
-git rm filename
-git commit -m "sometext"
+C-/ : in insert mode, u in command mode M-y : paste list (UNKONW yet) 
+*** file 
+C-x C-f, C-x C-s, C-x C-c, all ok 
+C-x 4 C-f : open in another windows 
+*** windows 
+C-x o : switch window 
+** DONE following [[http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000][git tutorial from MiaoXuefeng]] 
+   CLOSED: [2014-09-06 Sat 02:07] 
+*** init 
+git config --global user.name "Raymon SHan" 
+git config --global user.email "quickhorse77@gmail.com" git init 
+*** add/delete file and commit 
+git add filename git rm filename 
+git commit -m "sometext" 
 git status : view file status 
-git log : list all version
-git reflog : list version
-*** back to version
-git reset --hard [ HEAD | HEAD^^ | HEAD~20 | number ] : back commit to stage
-git checkout -- filename : back to last add or commit : back stage to working
-*** set github for first time
-git remote add origin https://github.com/RaymonSHan/learning.git
-git push -u origin master
-git clone https://github.com/RaymonSHan/learning.git
-*** branch
-git branch test : create branch
-git checkout test : switch to branch
-git checkout -b test : create and switch to branch
-git branch : show branch
-git branch -d test : delete branch
-git merge test : merge branch
-git stash [ | apply | pop | list ] : save temp , restore temp, restore and delete, list
-git delete [ -D ] test : D means force
-*** push to remote
-git push origin master
-** DONE following [[http://emacser.com/org-mode-yupeng.htm][chinese emacs site for org-mode]]
-   CLOSED: [2014-09-08 Mon 10:38]
-*** move between title
-C-c C-p : last title
-C-c C-n : next title
-C-c C-b : last same level title
-C-c C-f : next same level title
-C-c C-u : up level title
-*** table
-|- | 
-TAB : refit
-
+git log : list all version 
+git reflog : list version 
+*** back to version 
+git reset --hard [ HEAD | HEAD^^ | HEAD~20 | number ] : back commit to stage 
+git checkout -- filename : back to last add or commit : back stage to working 
+*** set github for first time 
+git remote add origin https://github.com/RaymonSHan/learning.git 
+git push -u origin master 
+git clone https://github.com/RaymonSHan/learning.git 
+*** branch 
+git branch test : create branch 
+git checkout test : switch to branch 
+git checkout -b test : create and switch to branch 
+git branch : show branch 
+git branch -d test : delete branch 
+git merge test : merge branch 
+git stash [ | apply | pop | list ] : save temp , restore temp, restore and delete, list 
+git delete [ -D ] test : D means force 
+*** push to remote 
+git push origin master 
+** DONE following [[http://emacser.com/org-mode-yupeng.htm][chinese emacs site for org-mode]] 
+   CLOSED: [2014-09-08 Mon 10:38] 
+*** move between title 
+C-c C-p : last title 
+C-c C-n : next title 
+C-c C-b : last same level title 
+C-c C-f : next same level title 
+C-c C-u : up level title 
+*** table 
+|-
+|
+TAB : refit 
 * My do myself .emacs.d
 ** DONE install cedet following [[http://cedet.sourceforge.net/setup.shtml][cedet sourceforge]]
    CLOSED: [2014-09-10 Wed 11:32]
@@ -149,7 +145,6 @@ C-= for mark, C-g for cancel mark.
 ** DONE change org-mode setting org-log-done follow [[http://orgmode.org/manual/Closing-items.html][org manual]]
    CLOSED: [2014-09-13 Sat 22:59]
 it change behavior since i update org-mode
-
 ** DONE install w3m 
    CLOSED: [2014-09-14 Sun 00:44]
 download development version from [[http://emacs-w3m.namazu.org/][emacs-w3m home]] via cvs, NOT the zip.
@@ -174,9 +169,27 @@ cd =, cd - for eshell, when reading eshellautojump
    CLOSED: [2014-09-14 Sun 22:13]
 install ghostscript and xpdf by apt-get
 can open .pdf file
-** TODO install magit
+** DONE install magit
+   CLOSED: [2014-09-14 Sun 23:20]
 download [[https://github.com/magit/git-modes][git-modes]]
 following [[https://github.com/magit/magit#installation][magit in github]]
+should read [[http://magit.github.io/magit.html][magit manual]]
+** DONE install evil
+   CLOSED: [2014-09-16 Tue 15:34]
+following [[http://www.emacswiki.org/emacs/Evil][evil emacswiki]], easy install
+vim is better for better for change, i should change many bind
+i should use all emacs bind in insert-mode, and most vim bind in command-mode
+  now i replace evil-insert-mode with evil-emacs-mode, and set ESC to back normal mode
+  following [[http://stackoverflow.com/questions/25542097/emacs-evil-mode-how-to-change-insert-state-to-emacs-state-automaticly][stackoverflow for it]]
+[[http://wikemacs.org/wiki/Evil][evil wiki]] is good, add some config from it.
+I try to bind user define function to ESC in evil-emacs-state, but fail ???
+  (define-key evil-emacs-state-map [escape] 'evil-normal-state) is OK
+  (define-key evil-emacs-state-map [escape] 'myfunction') is FAIL
+** DONE !!! [[http://www.emacswiki.org/emacs/key-chord.el][key chord]] is so cool, i add jk for evil-normal-mode, it may so many config to do !!!
+   CLOSED: [2014-09-17 Wed 00:05]
+is heavy chory ok?
+i should set delay control, just like [[http://stackoverflow.com/questions/11377373/refining-key-chord-el-triggering][stack overflow say]]
+
 * Learn emacs more
 ** DONE reading [[http://blog.chinaunix.net/uid-26185912-id-3334793.html][something about emacs]]
    CLOSED: [2014-09-14 Sun 21:32]
@@ -189,11 +202,25 @@ M-u : to UPCASE, M-c : Upcase first
 M-p, M-n : scroll command in M-x mod
 T : turn on/off image in w3m for all buffer, t : for current place
 should read it more about org
+* begin daemon test
+** DONE prepare dir and git
+   CLOSED: [2014-09-15 Mon 10:04]
+** DONE refollowing [[http://www.randomsample.de/cedetdocs/ede/Quick-Start.html][emacs development environment]] for ede autoconf
+   CLOSED: [2014-09-15 Mon 11:11]
+still rememberless, only can follow
+** DONE make another repo
+   CLOSED: [2014-09-15 Mon 11:31]
+** DONE learn getopt_long
+   CLOSED: [2014-09-16 Tue 10:23]
+follow [[http://linux.die.net/man/3/getopt_long][linux man for getopt_long]] & [[http://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Option-Example.html][gun getopt_long example]]
+** DONE begin debug for set breakpoint
+   CLOSED: [2014-09-16 Tue 12:47]
+i can set breakpoint by menu
 
 * should do things
+** TODO may read [[http://ergoemacs.org/emacs/emacs_keybinding_redesign.html][emacs keybinding setting]]
 ** TODO may install tab bar
 ** TODO following [[http://www.gnu.org/software/autoconf/manual/autoconf.html][full autoconf manual]] it is very long
-** TODO may install git
 ** TODO may install cscope
 
 
@@ -214,5 +241,4 @@ add addition header dir
 ** DONE 野炊需要物品
    CLOSED: [2014-09-06 Sat 23:57] SCHEDULED: <2014-09-06 Sat>
 桶装水 吊子 肉 烧烤螿 调料 烤炉 炭 锡纸
-
 
