@@ -1,3 +1,5 @@
+#+SEQ_TODO: TODO | DONE(d)  CANCEL(c)  FAIL(f) CONTINUE(u)  
+
 * DONE Step follow CB 
 ** DONE following [[http://orgmode.org/worg/org-tutorials/orgtutorial_dto.html][David's org-mode tutorial]] 
    CLOSED: [2014-09-04 Thu 15:03] 
@@ -165,7 +167,7 @@ add (global-flycheck-mode 1)
    CLOSED: [2014-09-14 Sun 14:56]
 download from [[https://github.com/Fuco1/smartparens][smartpaners github]], add require.
 add (smartpanes-global-mode 1)
-** DONE learning eshell, pause now
+** CONTINUE learning eshell, pause now
    CLOSED: [2014-09-14 Sun 20:50]
 should read [[http://www.masteringemacs.org/articles/2010/12/13/complete-guide-mastering-eshell/][master eshell by mickey]]
 cd =, cd - for eshell, when reading eshellautojump
@@ -193,8 +195,9 @@ I try to bind user define function to ESC in evil-emacs-state, but fail ???
    CLOSED: [2014-09-17 Wed 00:05]
 is heavy chory ok?
 i should set delay control, just like [[http://stackoverflow.com/questions/11377373/refining-key-chord-el-triggering][stack overflow say]]
-
+** DONE it seems no key_up and key_down, only key_press in linux
 * Learn emacs more
+   CLOSED: [2014-09-22 Mon 20:27]
 ** DONE reading [[http://blog.chinaunix.net/uid-26185912-id-3334793.html][something about emacs]]
    CLOSED: [2014-09-14 Sun 21:32]
 C-x C-w : save as
@@ -206,7 +209,7 @@ M-u : to UPCASE, M-c : Upcase first
 M-p, M-n : scroll command in M-x mod
 T : turn on/off image in w3m for all buffer, t : for current place
 should read it more about org
-** DONE binding my keyboard, stop now, for further again.
+** CANCEL binding my keyboard, stop now, for further again.
    CLOSED: [2014-09-19 Fri 09:35]
 *** DONE add cursor move
     CLOSED: [2014-09-17 Wed 22:49]
@@ -216,7 +219,7 @@ double : normal, a : speed, z : speed more, t : transpos
 the above is ok, have a puase.
 *** DONE try search selected function
     CLOSED: [2014-09-19 Fri 09:35]
-*** DONE stop key chord try    
+*** CANCEL stop key chord try    
     CLOSED: [2014-09-19 Fri 09:34]
 from [[http://stackoverflow.com/questions/202803/searching-for-marked-selected-text-in-emacs][stack overflow]], few body instereting it.
 
@@ -236,13 +239,66 @@ follow [[http://linux.die.net/man/3/getopt_long][linux man for getopt_long]] & [
 ** DONE begin debug for set breakpoint
    CLOSED: [2014-09-16 Tue 12:47]
 i can set breakpoint by menu
-
 ** DONE begin daemon start follow [[http://blog.csdn.net/cupidove/article/details/9310413][csdn cupidove]]
    CLOSED: [2014-09-19 Fri 23:44]
 it say good, the reason for twice fork() and so on. finish initDaemon();
-** TODO detect the state of daemon, 
+** CANCEL detect the state of daemon, 
+   CLOSED: [2014-09-20 Sat 16:19]
 follow [[http://blog.csdn.net/taolinke/article/details/8315492][csdn taolinke]] and start-stop-daemon.c
 /proc is a sys directory for thread.
+** DONE compile start-stop-daemon.c
+   CLOSED: [2014-09-21 Sun 00:55]
+I had thought do para in arg, but i could not write better than it.
+use start-stop-daemon.c itself.
+*** DONE the most esay condition for ede project
+    CLOSED: [2014-09-20 Sat 20:27]
+in new directory, and the parent is not ede project.
+all .c .h file in that directory. open one.
+create project : M-x ede-new RET Automake RET projectname RET
+create target : C-c . t programname RET program RET
+may add file : C-c . a programname RET
+compile : C-c . C
+run : C-c . R
+*** CANCEL add start-stop-daemon into content project
+    CLOSED: [2014-09-21 Sun 00:49]
+start-stop-daemon in sbin already, 
+*** TODO run daemon by it
+find [[https://gist.github.com/alobato/1968852][start-stop-daemon example]]
+** DONE 7: error: invalid conversion from ‘void*’ to ‘char*’ [-fpermissive]
+   CLOSED: [2014-09-25 Thu 00:10]
+when try mmap, following [[http://stackoverflow.com/questions/23258521/invalid-conversion-from-void-to-char-when-using-mmap][should use implicit]] use static_cast<char*>()
+** TODO runing mmap() get "Segmentation fault (core dumped)"
+do it tomorrow <2014-09-25 Thu>
+* linux learning
+** segment page memory manger follow [[http://blog.csdn.net/macrocrazier/article/details/6705298][csdn marcocrazier]]
+the most thing is slab, it is fit for my program
+** reading [[http://blog.chinaunix.net/uid-72446-id-2060685.html][chinaunix j4ckl1u]] memory manger in linux
+** reading [[http://www.cppblog.com/weiym/archive/2013/04/08/199238.html][some memory pool]] and a doc about dlmalloc
+** DONE find function mremap(), maybe useful
+   CLOSED: [2014-09-22 Mon 15:07]
+** DONE find [[http://www.slideshare.net/llj098/epoll-from-the-kernel-side][a io ppt]] about epoll iocp
+   CLOSED: [2014-09-22 Mon 15:32]
+** DONE find [[https://github.com/RajivKurian/epoll-example][epoll example]] in github
+or [[http://www.oschina.net/translate/how-to-use-epoll-a-complete-example-in-c][chinese version]] & [[http://www.cppblog.com/converse/archive/2008/04/29/48482.html][another chinese version]]
+and i know cmake and nc
+   CLOSED: [2014-09-22 Mon 15:54]
+** DONE for hash map find [[https://code.google.com/p/sparsehash/?redir%3D1][google sparsehash]]
+   CLOSED: [2014-09-22 Mon 20:29]
+** DONE find a [[http://linux.chinaunix.net/techdoc/system/2008/07/05/1015194.shtml][writeable exec segment]]
+   CLOSED: [2014-09-22 Mon 22:07]
+** change malloc setting
+mallopt(M_MMAP_MAX, 0);         // 禁止malloc调用mmap分配内存
+mallopt(M_TRIM_THRESHOLD, -1);  // 禁止内存紧缩
+** my question is how to tell kernel, the page can discard <2014-09-23 Tue>
+may useful in [[http://stackoverflow.com/questions/22421014/allocating-temporary-memory-in-linux][same order as me]]
+this is my really want [[http://lwn.net/Articles/594847/][MADV_FREE]], [[http://lwn.net/Articles/230799/][a older one]]
+madvise is ok for all, but MADV_FREE not in linux
+
+** DONE read [[~/Downloads/Understanding the Linux Kernel/Understanding.pdf][Understanding the Linux Kernel]] <2014-09-23 Tue> fast read
+   CLOSED: [2014-09-24 Wed 21:22]
+remap_file_pages() ?? not use
+
+** MAP_HUGETLB flag in mmap for use 4M page, in any mmap man
 * should do things
 ** TODO may read [[http://ergoemacs.org/emacs/emacs_keybinding_redesign.html][emacs keybinding setting]]
 ** TODO may install tab bar
@@ -268,30 +324,40 @@ add addition header dir
    CLOSED: [2014-09-06 Sat 23:57] SCHEDULED: <2014-09-06 Sat>
 桶装水 吊子 肉 烧烤螿 调料 烤炉 炭 锡纸
 
-* my table
-|--------------+------------+------------+------------+------------+------------+------------|
-|              | h          | i          | j          | k          | l          | ;          |
-|--------------+------------+------------+------------+------------+------------+------------|
-| double:move  | home       | up         | left       | down       | right      | end        |
-| a:speed      | pageup     | up * 3     | left * 7   | down * 3   | right * 7  | pagedown   |
-| z:speed more | beginning  | up * 8     | left * 17  | down * 8   | right * 17 | end        |
-| w:word sema  |            |            |            |            |            |            |
-|--------------+------------+------------+------------+------------+------------+------------|
-| t:tran seam  | tran Lword | tran Usent | tran Lchar | tran Dsent | tran Rchar | tran Rword |
-|              |            |            |            |            |            |            |
 
-  
+* useful page
+** mm
+[[http://futureinhands.iteye.com/blog/1048147][page switch in chinese]] [[http://www.rcollins.org/ddj/May96/][4M page]] [[http://www.mjmwired.net/kernel/Documentation/x86/x86_64/mm.txt][linux memory map]] [[https://www.kernel.org/doc/htmldocs/kernel-api/index.html][linux kernel api]] 
+[[http://gperftools.googlecode.com/svn/trunk/doc/tcmalloc.html][tcmalloc in google]]
+** epool
+[[http://liuxun.org/blog/guan-yu-duo-jin-cheng-epoll--yu---liang-qun-wen-ti/][epool with multiproce]] 
+epool in linux should use NIC with RSS(multi-queue) [[http://www.slideshare.net/sm9kr/iocp-vs-epoll-perfor][linux vs IOCP]]
+* bicycle
+| Date             | Way     | km | min | about                                  |
+|------------------+---------+----+-----+----------------------------------------|
+| <2014-09-25 Thu> | To Mudu | 19 |  55 | for the first time do NOT rest at Mudu |
+|                  |         |    |     |                                        |
+* evalution
+| Date             | Place          | Agent    | M$ | What                                         | cost      |
+|------------------+----------------+----------+----+----------------------------------------------+-----------|
+| before           |                |          | 16 |                                              | about 1.5 |
+| <2014-09-24 Wed> | Service Center | YuanXing |  3 | Procuratorate, specail people control        |           |
+| <2014-09-25 Thu> | Service Center | YuanXing |  3 | Gusu Family Planning Committe, mobile device |           |
+| <2014-09-25 Thu> | Service Center | Zhengjie |  2 | SZ Middle School(YQ), web app for student    |           |
+|                  |                |          |    |                                              |           |
 * 工作内容
 ** 下周安排邮储银行余额查询地址变更
    DEADLINE: <2014-09-22 Mon>
-** 下周安排支付中心业务需求讨论（潘鑫）
-   DEADLINE: <2014-09-22 Mon>
-** 下周安排人民银行，讨论TCBS上线后，集中支付退票号的关联问题
-   DEADLINE: <2014-09-22 Mon>
-** 非税收入入库单时间拖延，工行、瑞联
-   DEADLINE: <2014-09-22 Mon>
+** DONE 下周安排支付中心业务需求讨论（潘鑫）
+   CLOSED: [2014-09-22 Mon 10:02] DEADLINE: <2014-09-22 Mon>
+** CONTINUE 下周安排人民银行，讨论TCBS上线后，集中支付退票号的关联问题
+   CLOSED: [2014-09-22 Mon 10:05] DEADLINE: <2014-09-22 Mon>
+** CONTINUE 非税收入入库单时间拖延，工行、瑞联
+   CLOSED: [2014-09-22 Mon 10:02] DEADLINE: <2014-09-22 Mon>
 ** 国库集中支付代理银行工作会议 工商银行 [2014-09-19 Fri]
 潘鑫主持，张亮介绍近期工作、回单要求，赵斌介绍动态监控系统、467条报警、39退回，缪翔云补充。
 王强介绍工资统发近期情况。
 工行介绍电子化支付，其实施先直接、再授权。
-
+** DONE 开发人员工作环境安排，预计在支付中心
+   CLOSED: [2014-09-22 Mon 10:03] DEADLINE: <2014-09-22 Mon>
+** TODO 移动线路安装，张家港保税区国地税 <2014-09-24 Wed>
