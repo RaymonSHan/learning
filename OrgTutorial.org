@@ -267,8 +267,27 @@ find [[https://gist.github.com/alobato/1968852][start-stop-daemon example]]
 ** DONE 7: error: invalid conversion from ‘void*’ to ‘char*’ [-fpermissive]
    CLOSED: [2014-09-25 Thu 00:10]
 when try mmap, following [[http://stackoverflow.com/questions/23258521/invalid-conversion-from-void-to-char-when-using-mmap][should use implicit]] use static_cast<char*>()
+** DONE tv_nsec is not a number of timespec
+   CLOSED: [2014-09-25 Thu 15:46]
+i find __syscall_slong_t only used in 32bit, 
+so i change it to compile to x64 by add CPPFLAGS -m64
 ** TODO runing mmap() get "Segmentation fault (core dumped)"
-do it tomorrow <2014-09-25 Thu>
+ smallpagestart = static_cast<char*>
+    (mmap (0, SIZE_RAY << 22, PROT_READ | PROT_WRITE, MAP_HUGETLB | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
+now this cause seg fault, while it is ok without MAP_HUGETLB <2014-09-26 Fri>
+here is the solution in [[https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt][kernel]], should mount hugetlbfs for user space
+here is lib for use hugepage in [[http://libhugetlbfs.sourceforge.net/][sourceforge]]
+** TODO running time for mmap and page fault
+|                                         | 4096 lPage | 64* G  | 64* T  |
+|-----------------------------------------+------------+--------+--------|
+| time for clock_gettime()                | 21-100n    |        |        |
+| mmap 1024*4k                            | 4-15m      |        |        |
+| small page fault 1024 and write SHARED  | 800u-3m    |        |        |
+| small page fault 1024 and write PRIVATE | 500u-2m    | 50-90m | 38-50m |
+| write 1024, PRIVATE                     | 20-30u     | 1-2m   | 0.7-2m |
+|                                         |            |        |        |
+summary : write one char for 2ns, 4k page fault 125ns, in text mode
+
 * linux learning
 ** segment page memory manger follow [[http://blog.csdn.net/macrocrazier/article/details/6705298][csdn marcocrazier]]
 the most thing is slab, it is fit for my program
@@ -318,6 +337,7 @@ add addition header dir
 ** TODO following [[http://www.gnu.org/software/autoconf/manual/autoconf.html][full autoconf manual]] it is very long
 ** TODO following [[http://www.gnu.org/software/emacs/tour/][gnu emacs tutorial]]
 
+** TODO there are many about HUGE_TAB in [[http://stackoverflow.com/questions/6575010/ubuntu-10-04-error-in-using-map-hugetlb-with-map-shared][stackoverflow]]
 
 * none of work
 ** DONE 野炊需要物品
@@ -344,7 +364,7 @@ epool in linux should use NIC with RSS(multi-queue) [[http://www.slideshare.net/
 | <2014-09-24 Wed> | Service Center | YuanXing |  3 | Procuratorate, specail people control        |           |
 | <2014-09-25 Thu> | Service Center | YuanXing |  3 | Gusu Family Planning Committe, mobile device |           |
 | <2014-09-25 Thu> | Service Center | Zhengjie |  2 | SZ Middle School(YQ), web app for student    |           |
-|                  |                |          |    |                                              |           |
+| <2014-09-26 Fri> | Wujiang        |          |    |                                              | 0.5       |
 * 工作内容
 ** 下周安排邮储银行余额查询地址变更
    DEADLINE: <2014-09-22 Mon>
