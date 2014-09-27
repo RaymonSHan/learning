@@ -271,23 +271,39 @@ when try mmap, following [[http://stackoverflow.com/questions/23258521/invalid-c
    CLOSED: [2014-09-25 Thu 15:46]
 i find __syscall_slong_t only used in 32bit, 
 so i change it to compile to x64 by add CPPFLAGS -m64
-** TODO runing mmap() get "Segmentation fault (core dumped)"
+** DONE runing mmap() get "Segmentation fault (core dumped)"
+   CLOSED: [2014-09-27 Sat 22:30]
  smallpagestart = static_cast<char*>
     (mmap (0, SIZE_RAY << 22, PROT_READ | PROT_WRITE, MAP_HUGETLB | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
 now this cause seg fault, while it is ok without MAP_HUGETLB <2014-09-26 Fri>
 here is the solution in [[https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt][kernel]], should mount hugetlbfs for user space
 here is lib for use hugepage in [[http://libhugetlbfs.sourceforge.net/][sourceforge]]
-** TODO running time for mmap and page fault
-|                                         | 4096 lPage | 64* G  | 64* T  |
-|-----------------------------------------+------------+--------+--------|
-| time for clock_gettime()                | 21-100n    |        |        |
-| mmap 1024*4k                            | 4-15m      |        |        |
-| small page fault 1024 and write SHARED  | 800u-3m    |        |        |
-| small page fault 1024 and write PRIVATE | 500u-2m    | 50-90m | 38-50m |
-| write 1024, PRIVATE                     | 20-30u     | 1-2m   | 0.7-2m |
-|                                         |            |        |        |
-summary : write one char for 2ns, 4k page fault 125ns, in text mode
 
+can view HugePage_Total, free, revd, pagesize from /proc/meminfo
+this maybe useful in [[http://docs.oracle.com/cd/E17952_01/refman-5.0-en/large-page-support.html][oracle use hugetlb]]
+
+finish step, the most easy way
+0. groupadd raymons & hugeadm --set-shm-group raymons. of course many way can add it.
+1. alloc 20 page : sudo sh -c 'echo 20 > /proc/sys/vm/nr_hugepages'
+2. mount hugetlbfs : sudo mount -t hugetlbs -o mode=777 none /mnt/huge
+** DONE running time for mmap and page fault
+   CLOSED: [2014-09-28 Sun 00:16]
+| get by clock_gettime()                  | 4096 lPage | 64* Gra | 64* Txt |
+|-----------------------------------------+------------+---------+---------|
+| time for clock_gettime()                | 21-100n    |         |         |
+| mmap 1024*4k                            | 4-15m      |         |         |
+| small page fault 1024 and write SHARED  | 800u-3m    |         |         |
+| small page fault 1024 and write PRIVATE | 500u-2m    | 50-90m  | 38-50m  |
+| write 1024, PRIVATE                     | 20-30u     | 1-2m    | 0.7-2m  |
+summary : write one char for 2ns, 4k page fault 125ns, in text mode
+| get by time in console         |        |      |        |
+|--------------------------------+--------+------+--------|
+| Get 128M for 1280 times = 160G |   real | user |    sys |
+| huge page                      | 23.883 |  1.7 | 21.999 |
+| small page                     | 25.335 |  1.8 | 23.383 |
+summary : 4k page map&unmap 555ns, 2M page map&unmap 268us, 
+in this test huge page improved 6% 
+** TODO test madvise for free physics page
 * linux learning
 ** segment page memory manger follow [[http://blog.csdn.net/macrocrazier/article/details/6705298][csdn marcocrazier]]
 the most thing is slab, it is fit for my program
