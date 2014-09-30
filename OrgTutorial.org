@@ -226,27 +226,29 @@ from [[http://stackoverflow.com/questions/202803/searching-for-marked-selected-t
 ** learn orgmode some <2014-09-19 Fri>
 C-c . : add timestamp, M-up M-down : move meta up/down, M-left M-right : shift meta 
 * begin daemon test
-** DONE prepare dir and git
+** DONE finish cpp compile
+   CLOSED: [2014-09-25 Thu 16:57]
+*** DONE prepare dir and git
    CLOSED: [2014-09-15 Mon 10:04]
-** DONE refollowing [[http://www.randomsample.de/cedetdocs/ede/Quick-Start.html][emacs development environment]] for ede autoconf
+*** DONE refollowing [[http://www.randomsample.de/cedetdocs/ede/Quick-Start.html][emacs development environment]] for ede autoconf
    CLOSED: [2014-09-15 Mon 11:11]
 still rememberless, only can follow
-** DONE make another repo
+*** DONE make another repo
    CLOSED: [2014-09-15 Mon 11:31]
-** DONE learn getopt_long
+*** DONE learn getopt_long
    CLOSED: [2014-09-16 Tue 10:23]
 follow [[http://linux.die.net/man/3/getopt_long][linux man for getopt_long]] & [[http://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Option-Example.html][gun getopt_long example]]
-** DONE begin debug for set breakpoint
+*** DONE begin debug for set breakpoint
    CLOSED: [2014-09-16 Tue 12:47]
 i can set breakpoint by menu
-** DONE begin daemon start follow [[http://blog.csdn.net/cupidove/article/details/9310413][csdn cupidove]]
+*** DONE begin daemon start follow [[http://blog.csdn.net/cupidove/article/details/9310413][csdn cupidove]]
    CLOSED: [2014-09-19 Fri 23:44]
 it say good, the reason for twice fork() and so on. finish initDaemon();
-** CANCEL detect the state of daemon, 
+*** CANCEL detect the state of daemon, 
    CLOSED: [2014-09-20 Sat 16:19]
 follow [[http://blog.csdn.net/taolinke/article/details/8315492][csdn taolinke]] and start-stop-daemon.c
 /proc is a sys directory for thread.
-** DONE compile start-stop-daemon.c
+*** DONE compile start-stop-daemon.c
    CLOSED: [2014-09-21 Sun 00:55]
 I had thought do para in arg, but i could not write better than it.
 use start-stop-daemon.c itself.
@@ -262,31 +264,36 @@ run : C-c . R
 *** CANCEL add start-stop-daemon into content project
     CLOSED: [2014-09-21 Sun 00:49]
 start-stop-daemon in sbin already, 
-*** TODO run daemon by it
+*** FAIL run daemon by it
+    CLOSED: [2014-09-30 Tue 15:01]
 find [[https://gist.github.com/alobato/1968852][start-stop-daemon example]]
-** DONE 7: error: invalid conversion from ‘void*’ to ‘char*’ [-fpermissive]
+*** DONE 7: error: invalid conversion from ‘void*’ to ‘char*’ [-fpermissive]
    CLOSED: [2014-09-25 Thu 00:10]
 when try mmap, following [[http://stackoverflow.com/questions/23258521/invalid-conversion-from-void-to-char-when-using-mmap][should use implicit]] use static_cast<char*>()
-** DONE tv_nsec is not a number of timespec
+*** DONE tv_nsec is not a number of timespec
    CLOSED: [2014-09-25 Thu 15:46]
 i find __syscall_slong_t only used in 32bit, 
 so i change it to compile to x64 by add CPPFLAGS -m64
-** DONE runing mmap() get "Segmentation fault (core dumped)"
+** DONE alloc large memory
+   CLOSED: [2014-09-30 Tue 14:59]
+*** DONE runing mmap() get "Segmentation fault (core dumped)" *SOURCE*
    CLOSED: [2014-09-27 Sat 22:30]
  smallpagestart = static_cast<char*>
     (mmap (0, SIZE_RAY << 22, PROT_READ | PROT_WRITE, MAP_HUGETLB | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
 now this cause seg fault, while it is ok without MAP_HUGETLB <2014-09-26 Fri>
 here is the solution in [[https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt][kernel]], should mount hugetlbfs for user space
 here is lib for use hugepage in [[http://libhugetlbfs.sourceforge.net/][sourceforge]]
-
-can view HugePage_Total, free, revd, pagesize from /proc/meminfo
 this maybe useful in [[http://docs.oracle.com/cd/E17952_01/refman-5.0-en/large-page-support.html][oracle use hugetlb]]
+can view HugePage_Total, free, revd, pagesize from /proc/meminfo
 
-finish step, the most easy way
-0. groupadd raymons & hugeadm --set-shm-group raymons. of course many way can add it.
-1. alloc 20 page : sudo sh -c 'echo 20 > /proc/sys/vm/nr_hugepages'
-2. mount hugetlbfs : sudo mount -t hugetlbs -o mode=777 none /mnt/huge
-** DONE running time for mmap and page fault
+finish step, the most easy way, 1 & 2 may be not necessary.
+1. groupadd raymons & getent group raymons (get gid) & adduser raymon raymons
+2. hugeadm --set-shm-group raymons | sudo sh -c 'echo 1001 > /proc/sys/vm/hugetlb_shm_group'
+3. alloc 20 page : sudo sh -c 'echo 20 > /proc/sys/vm/nr_hugepages'
+4. mount hugetlbfs : sudo mount -t hugetlbfs -o mode=777 none /mnt/huge
+verity : cat /proc/meminfo & df -a
+source : [[https://github.com/RaymonSHan/content.d/blob/0b61a3777ef048bb4a407e45f22051f5ed00d525/src/daemonctl.cpp][daemonctl.cpp in github]]
+*** DONE running time for mmap and page fault
    CLOSED: [2014-09-28 Sun 00:16]
 | get by clock_gettime()                  | 4096 lPage | 64* Gra | 64* Txt |
 |-----------------------------------------+------------+---------+---------|
@@ -303,7 +310,27 @@ summary : write one char for 2ns, 4k page fault 125ns, in text mode
 | small page                     | 25.335 |  1.8 | 23.383 |
 summary : 4k page map&unmap 555ns, 2M page map&unmap 268us, 
 in this test huge page improved 6% 
-** TODO test madvise for free physics page
+*** FAIL test madvise for free physics page for huge page
+   CLOSED: [2014-09-30 Tue 10:05]
+the size in nr_hugepages will roll down to physics memory limit, even set a large number.
+mmap for huge page do not alloc physics page, it cause page fault as small page do.
+something about [[https://www.kernel.org/doc/Documentation/vm/transhuge.txt][Transparent hugepage]]
+All things seemed good, only the MADV_DONTNEED do not affect when MAP_HUGETLB setting in mmap
+*** DONE change segment setting for large alloc
+   CLOSED: [2014-09-28 Sun 16:39]
+sudo sh -c 'echo 67108864 > shmall'      // 256G in 4k page
+sudo sh -c 'echo 4294967296 > shmmax'    // 4G in byte
+for summary : lpcs -lm
+the size should use long long int memorySize = 0x1111LL for 64bit
+and the most is add MAP_NORESERVE in mmap [[http://stackoverflow.com/questions/4803152/mmap-fails-when-length-is-larger-than-4gb][stackoverflow for alloc over 4G]],
+  or the size is limited by swap space.
+*** CONTINUE test madvise for normal page *SOURCE*
+   CLOSED: [2014-09-30 Tue 14:52]
+mmap&munmap for normal & huge page, and MADV_DONTNEED for normal use almost same time
+is it because of VMWare? should test it in HOST again.
+source : [[https://github.com/RaymonSHan/content.d/blob/4dc602c12cf1a8c7da42924b76af58f1659bbaab/src/daemonctl.cpp][daemonctl.cpp in github]]
+** TODO mmap with file
+*** TODO first map
 * linux learning
 ** segment page memory manger follow [[http://blog.csdn.net/macrocrazier/article/details/6705298][csdn marcocrazier]]
 the most thing is slab, it is fit for my program
@@ -335,6 +362,7 @@ remap_file_pages() ?? not use
 
 ** MAP_HUGETLB flag in mmap for use 4M page, in any mmap man
 * should do things
+** TODO should reread segment manager in linux
 ** TODO may read [[http://ergoemacs.org/emacs/emacs_keybinding_redesign.html][emacs keybinding setting]]
 ** TODO may install tab bar
 ** TODO following [[http://www.gnu.org/software/autoconf/manual/autoconf.html][full autoconf manual]] it is very long
@@ -360,7 +388,6 @@ add addition header dir
    CLOSED: [2014-09-06 Sat 23:57] SCHEDULED: <2014-09-06 Sat>
 桶装水 吊子 肉 烧烤螿 调料 烤炉 炭 锡纸
 
-
 * useful page
 ** mm
 [[http://futureinhands.iteye.com/blog/1048147][page switch in chinese]] [[http://www.rcollins.org/ddj/May96/][4M page]] [[http://www.mjmwired.net/kernel/Documentation/x86/x86_64/mm.txt][linux memory map]] [[https://www.kernel.org/doc/htmldocs/kernel-api/index.html][linux kernel api]] 
@@ -369,18 +396,21 @@ add addition header dir
 [[http://liuxun.org/blog/guan-yu-duo-jin-cheng-epoll--yu---liang-qun-wen-ti/][epool with multiproce]] 
 epool in linux should use NIC with RSS(multi-queue) [[http://www.slideshare.net/sm9kr/iocp-vs-epoll-perfor][linux vs IOCP]]
 * bicycle
-| Date             | Way     | km | min | about                                  |
-|------------------+---------+----+-----+----------------------------------------|
-| <2014-09-25 Thu> | To Mudu | 19 |  55 | for the first time do NOT rest at Mudu |
-|                  |         |    |     |                                        |
+| Date             | Way          | km | min | about                                  |
+|------------------+--------------+----+-----+----------------------------------------|
+| <2014-09-25 Thu> | Around Mudu  | 19 |  55 | for the first time do NOT rest at Mudu |
+| <2014-09-29 Mon> | To Wujiang   | 22 |  68 | follow wind                            |
+| <2014-09-29 Mon> | From Wujiang | 24 |  95 | against wind                           |
+|                  |              |    |     |                                        |
 * evalution
-| Date             | Place          | Agent    | M$ | What                                         | cost      |
-|------------------+----------------+----------+----+----------------------------------------------+-----------|
-| before           |                |          | 16 |                                              | about 1.5 |
-| <2014-09-24 Wed> | Service Center | YuanXing |  3 | Procuratorate, specail people control        |           |
-| <2014-09-25 Thu> | Service Center | YuanXing |  3 | Gusu Family Planning Committe, mobile device |           |
-| <2014-09-25 Thu> | Service Center | Zhengjie |  2 | SZ Middle School(YQ), web app for student    |           |
-| <2014-09-26 Fri> | Wujiang        |          |    |                                              | 0.5       |
+| Date             | Place          | Agent    |   M | What                                         | cost      |
+|------------------+----------------+----------+-----+----------------------------------------------+-----------|
+| before           |                |          |  16 |                                              | about 1.5 |
+| <2014-09-24 Wed> | Service Center | YuanXing |   3 | Procuratorate, specail people control        |           |
+| <2014-09-25 Thu> | Service Center | YuanXing |   3 | Gusu Family Planning Committe, mobile device |           |
+| <2014-09-25 Thu> | Service Center | ZhengJie |   2 | SZ Middle School(YQ), web app for student    |           |
+| <2014-09-26 Fri> | Wujiang        | WeiKang  | 3.5 | LiLi Hospital Info System                    | 0.5       |
+| <2014-09-29 Mon> | Wujiang        | YingCai  | 4.5 | Wujiang Public Security, car recognition     |           |
 * 工作内容
 ** 下周安排邮储银行余额查询地址变更
    DEADLINE: <2014-09-22 Mon>
@@ -397,3 +427,7 @@ epool in linux should use NIC with RSS(multi-queue) [[http://www.slideshare.net/
 ** DONE 开发人员工作环境安排，预计在支付中心
    CLOSED: [2014-09-22 Mon 10:03] DEADLINE: <2014-09-22 Mon>
 ** TODO 移动线路安装，张家港保税区国地税 <2014-09-24 Wed>
+** TODO 预算支出进度查询表，业务口径确认
+   DEADLINE: <2014-10-08 Wed>
+
+
