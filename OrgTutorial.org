@@ -76,9 +76,10 @@ git branch : show branch
 git branch -d test : delete branch 
 git merge test : merge branch 
 git stash [ | apply | pop | list ] : save temp , restore temp, restore and delete, list 
-git delete [ -D ] test : D means force 
+git branch delete [ -D ] test : D means force 
 *** push to remote 
 git push origin master 
+[[http://862123204-qq-com.iteye.com/blog/1683315][push branch to origin]] git push origin test:test <2014-10-09 Thu>
 ** DONE following [[http://emacser.com/org-mode-yupeng.htm][chinese emacs site for org-mode]] 
    CLOSED: [2014-09-08 Mon 10:38] 
 *** move between title 
@@ -329,8 +330,57 @@ and the most is add MAP_NORESERVE in mmap [[http://stackoverflow.com/questions/4
 mmap&munmap for normal & huge page, and MADV_DONTNEED for normal use almost same time
 is it because of VMWare? should test it in HOST again.
 source : [[https://github.com/RaymonSHan/content.d/blob/4dc602c12cf1a8c7da42924b76af58f1659bbaab/src/daemonctl.cpp][daemonctl.cpp in github]]
-** TODO mmap with file
-*** TODO first map
+** DONE mmap with file
+   CLOSED: [2014-10-03 Fri 00:35]
+*** DONE first map *SOURCE*
+    CLOSED: [2014-10-02 Thu 01:17]
+mmap file should RDWR right, the size of file changed by the last write, even after unmap
+something unkonw, I have successed for MAP_PRIVATED in mmap() ???
+source : [[https://github.com/RaymonSHan/content.d/blob/252d2ed46ca0b853c213311754497d94f403eb25/src/daemonctl.cpp][daemonctl.cpp in github]]
+*** DONE hook file change
+    CLOSED: [2014-10-02 Thu 22:46]
+[[http://stackoverflow.com/questions/2103315/linux-kernel-system-call-hooking-example][hook sys_call_table]] [[http://stackoverflow.com/questions/11642318/hooking-mmap-system-to-provide-real-time-type-conversion][hook page fault]] [[http://stefan.buettcher.org/cs/fschange/][a proc system for file change]]
+maybe inotify is enough, 
+here is [[https://gist.github.com/TheCodeArtist/5874669][add inotify for mmap file in github]]
+*** DONE test inotify for my use *SOURCE*
+    CLOSED: [2014-10-03 Fri 00:27]
+follow [[http://man7.org/tlpi/code/online/dist/inotify/demo_inotify.c.html][example in man]], so easy
+whether mmap or not, inotify can notify file change outside from my program
+source : [[https://github.com/RaymonSHan/content.d/blob/478eb83f6a84854df1c7a5a031b7195a081ba4c6/src/daemonctl.cpp][daemonctl.cpp in github]]
+** DONE color and cursor in bash
+   CLOSED: [2014-10-06 Mon 23:05]
+[[https://wiki.archlinux.org/index.php/Color_Bash_Prompt][color in bash in wiki]]
+30 Black, 31 Red, 32 Green, 33 Yellow, 34 Blue, 35 Pruple, 36 Cyan, 37 White
+\e[0;30m for Regular, \e[1;30m for Bold, \e[4;30m for Underline, \e[40m for Background
+[[http://www.linuxjournal.com/article/8603][color in echo]]
+in bash : C-v <ESC> [{attr};{fg};{bg}m, which display like echo "^[[0;31;40mIn Color"
+[[http://www.linuxquestions.org/questions/linux-software-2/issue-in-a-shell-script-using-an-if-statement-and-wall-875537/][command for color in bash]]
+in bash : tput setaf {num}; restore : tput sgr0
+[[http://unix.stackexchange.com/questions/99460/linux-shell-sending-messages-to-another-user][send message to other]]
+w, wall, 
+sudo echo "some meassage" > /dev/pts/4
+[[http://www.techpository.com/?page_id%3D1398][escape sequence]]
+all start with C-v <ESC> [
+change cursor place : {row};{col}f; save cursor : s; restore cursor : u; 
+** DONE do a clock for all pts by daemon 
+   CLOSED: [2014-10-10 Fri 15:52]
+*** DONE first a sleep loop single thread program *SOURCE*
+    CLOSED: [2014-10-08 Wed 23:06]
+this is a sleep loop program, a better should multi thread.
+A full day to complete it.
+source : [[https://github.com/RaymonSHan/content.d/blob/eeb7bb68eff1bb84312e88b8f7701e135bc462c5/src/daemonctl.cpp][daemonctl.cpp in github]]
+*** DONE mutlthread ptsclock *SOURCE*
+    CLOSED: [2014-10-10 Fri 13:16]
+make a stupid error, use STACK_PLACE instead of STACK_SIZE for mmap, and fail <2014-10-09 Thu>
+[[http://stackoverflow.com/questions/1083172/how-to-mmap-the-stack-for-the-clone-system-call-on-linux][a little sample for clone]]
+MUST use __WCLONE option for waitpid for clone <2014-10-10 Fri>
+source : [[https://github.com/RaymonSHan/content.d/blob/4a2504b6066f7d124e85880bf7f23abb7859a63f/src/daemonctl.cpp][daemonctl.cpp in github]]
+*** FAIL try to get text from console
+    CLOSED: [2014-10-10 Fri 15:52]
+[[http://rosettacode.org/wiki/Terminal_control/Dimensions][control console on some platform]]
+*** CONTINUE get user in linux
+   CLOSED: [2014-10-07 Tue 22:17]
+[[http://git.savannah.gnu.org/cgit/coreutils.git/tree/src/][source of command in linux]], find who
 * linux learning
 ** segment page memory manger follow [[http://blog.csdn.net/macrocrazier/article/details/6705298][csdn marcocrazier]]
 the most thing is slab, it is fit for my program
@@ -361,6 +411,10 @@ madvise is ok for all, but MADV_FREE not in linux
 remap_file_pages() ?? not use
 
 ** MAP_HUGETLB flag in mmap for use 4M page, in any mmap man
+** DONE find in files
+   CLOSED: [2014-10-07 Tue 15:33]
+ grep -n -R 'UTMP_FILE' /usr/include 
+** fileno() from FILE* to int handle
 * should do things
 ** TODO should reread segment manager in linux
 ** TODO may read [[http://ergoemacs.org/emacs/emacs_keybinding_redesign.html][emacs keybinding setting]]
@@ -393,8 +447,11 @@ add addition header dir
 [[http://futureinhands.iteye.com/blog/1048147][page switch in chinese]] [[http://www.rcollins.org/ddj/May96/][4M page]] [[http://www.mjmwired.net/kernel/Documentation/x86/x86_64/mm.txt][linux memory map]] [[https://www.kernel.org/doc/htmldocs/kernel-api/index.html][linux kernel api]] 
 [[http://gperftools.googlecode.com/svn/trunk/doc/tcmalloc.html][tcmalloc in google]]
 ** epool
-[[http://liuxun.org/blog/guan-yu-duo-jin-cheng-epoll--yu---liang-qun-wen-ti/][epool with multiproce]] 
-epool in linux should use NIC with RSS(multi-queue) [[http://www.slideshare.net/sm9kr/iocp-vs-epoll-perfor][linux vs IOCP]]
+[[http://liuxun.org/blog/guan-yu-duo-jin-cheng-epoll--yu---liang-qun-wen-ti/][epoll with multiproce]]
+epoll in linux should use NIC with RSS(multi-queue) [[http://www.slideshare.net/sm9kr/iocp-vs-epoll-perfor][linux vs IOCP]]
+[[https://github.com/aarond10/epoll_threadpool][epoll threadpool]]
+** other
+[[http://ld-hust.iteye.com/blog/630941][some blog]] 
 * bicycle
 | Date             | Way          | km | min | about                                  |
 |------------------+--------------+----+-----+----------------------------------------|
