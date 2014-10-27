@@ -381,6 +381,29 @@ source : [[https://github.com/RaymonSHan/content.d/blob/4a2504b6066f7d124e85880b
 *** CONTINUE get user in linux
    CLOSED: [2014-10-07 Tue 22:17]
 [[http://git.savannah.gnu.org/cgit/coreutils.git/tree/src/][source of command in linux]], find who
+** TODO start epoll test
+[[http://stackoverflow.com/questions/16909856/adding-new-sockets-to-epoll-instances-other-than-the-epoll-instance-that-polls-t][the way I like, one leader for accept, other recv/send]]
+[[http://www.ccvita.com/515.html][some advice for epoll]] how to read and write for ET
+*** TODO test sigaction & sigquenc <2014-10-11 Sat> so many for read
+[[http://www.linuxjournal.com/files/linuxjournal.com/linuxjournal/articles/063/6391/6391l3.html][useful sample]] for get crash info
+[[http://stackoverflow.com/questions/14014669/system-includes-moved-on-ubuntu-g-cannot-resolve-reg-eip][use REG_EIP]] add -I for g++
+[[http://www.linuxprogrammingblog.com/code-examples/sigaction][sample for sigaction]]
+[[http://stackoverflow.com/questions/9028934/how-to-interrupt-epoll-pwait-with-an-appropriate-signal][use pipe for epoll]]
+[[http://www.win.tue.nl/~aeb/linux/lk/lk-12.html][some kind of event]]
+[[http://pic.dhe.ibm.com/infocenter/comphelp/v121v141/index.jsp?topic%3D%252Fcom.ibm.xlc121.aix.doc%252Fcompiler_ref%252Fbif_gcc_atomic_val_comp_swap.html][atomic function in gcc]]
+*** DONE for function pointer, class function pointer
+    CLOSED: [2014-10-16 Thu 16:37]
+(class pointer ->* class function pointer) (argv)  is
+class function (this, argv)
+i have used it in OcciIocp::Protocol.cpp
+*** TODO rewrite memory alloc
+i make a mistake for InterlockedCompareExchange and __sync_val_compare_and_swap
+have different para order <2014-10-26 Sun>
+*** DONE sample asm inline
+    CLOSED: [2014-10-27 Mon 23:14]
+[[http://www.codeproject.com/Articles/15971/Using-Inline-Assembly-in-C-C][asm inline]]
+should use stack for store per thread info
+[[http://stackoverflow.com/questions/1898834/why-would-one-use-movl-1-eax-as-opposed-to-say-movb-1-eax][the useful is b s w l q t]]
 * linux learning
 ** segment page memory manger follow [[http://blog.csdn.net/macrocrazier/article/details/6705298][csdn marcocrazier]]
 the most thing is slab, it is fit for my program
@@ -415,6 +438,9 @@ remap_file_pages() ?? not use
    CLOSED: [2014-10-07 Tue 15:33]
  grep -n -R 'UTMP_FILE' /usr/include 
 ** fileno() from FILE* to int handle
+** CONTINUE read [[http://www.win.tue.nl/~aeb/linux/lk/lk.html%20%20][linux kernel]] only a fast review
+   CLOSED: [2014-10-13 Mon 14:03]
+'strip' utility removes the symbol table
 * should do things
 ** TODO should reread segment manager in linux
 ** TODO may read [[http://ergoemacs.org/emacs/emacs_keybinding_redesign.html][emacs keybinding setting]]
@@ -447,11 +473,12 @@ add addition header dir
 [[http://futureinhands.iteye.com/blog/1048147][page switch in chinese]] [[http://www.rcollins.org/ddj/May96/][4M page]] [[http://www.mjmwired.net/kernel/Documentation/x86/x86_64/mm.txt][linux memory map]] [[https://www.kernel.org/doc/htmldocs/kernel-api/index.html][linux kernel api]] 
 [[http://gperftools.googlecode.com/svn/trunk/doc/tcmalloc.html][tcmalloc in google]]
 ** epool
-[[http://liuxun.org/blog/guan-yu-duo-jin-cheng-epoll--yu---liang-qun-wen-ti/][epoll with multiproce]]
+[[http://liuxun.org/blog/guan-yu-duo-jin-cheng-epoll--yu---liang-qun-wen-ti/][epoll with multiprocess]]
 epoll in linux should use NIC with RSS(multi-queue) [[http://www.slideshare.net/sm9kr/iocp-vs-epoll-perfor][linux vs IOCP]]
 [[https://github.com/aarond10/epoll_threadpool][epoll threadpool]]
 ** other
 [[http://ld-hust.iteye.com/blog/630941][some blog]] 
+[[http://en.cppreference.com/w/cpp/language/operators][overload operation in c++]]
 * bicycle
 | Date             | Way          | km | min | about                                  |
 |------------------+--------------+----+-----+----------------------------------------|
@@ -460,14 +487,18 @@ epoll in linux should use NIC with RSS(multi-queue) [[http://www.slideshare.net/
 | <2014-09-29 Mon> | From Wujiang | 24 |  95 | against wind                           |
 |                  |              |    |     |                                        |
 * evalution
-| Date             | Place          | Agent    |   M | What                                         | cost      |
-|------------------+----------------+----------+-----+----------------------------------------------+-----------|
-| before           |                |          |  16 |                                              | about 1.5 |
-| <2014-09-24 Wed> | Service Center | YuanXing |   3 | Procuratorate, specail people control        |           |
-| <2014-09-25 Thu> | Service Center | YuanXing |   3 | Gusu Family Planning Committe, mobile device |           |
-| <2014-09-25 Thu> | Service Center | ZhengJie |   2 | SZ Middle School(YQ), web app for student    |           |
-| <2014-09-26 Fri> | Wujiang        | WeiKang  | 3.5 | LiLi Hospital Info System                    | 0.5       |
-| <2014-09-29 Mon> | Wujiang        | YingCai  | 4.5 | Wujiang Public Security, car recognition     |           |
+| Date             | Place            | Agent    |   M | What                                         | cost      |
+|------------------+------------------+----------+-----+----------------------------------------------+-----------|
+| before           |                  |          |  16 |                                              | about 1.5 |
+| <2014-09-24 Wed> | Service Center   | YuanXing |   3 | Procuratorate, specail people control        |           |
+| <2014-09-25 Thu> | Service Center   | YuanXing |   3 | Gusu Family Planning Committe, mobile device |           |
+| <2014-09-25 Thu> | Service Center   | ZhengJie |   2 | SZ Middle School(YQ), web app for student    |           |
+| <2014-09-26 Fri> | Wujiang          | WeiKang  | 3.5 | LiLi Hospital Info System                    | 0.5       |
+| <2014-09-29 Mon> | Wujiang          | YingCai  | 4.5 | Wujiang Public Security, car recognition     |           |
+| <2014-10-14 Tue> | 33 Middle School | self     |   8 | Edu bea. Fundation Database of school        |           |
+| <2014-10-15 Wed> | Service Center   | RunFang  |   3 | Pub Security, mobile police                  |           |
+| <2014-10-23 Thu> | Service Center   | JinYuan  |   3 | Pub Security, Project manager                |           |
+| <2014-10-27 Mon> | Service Center   | YuanXing |   3 | Env Monitor, hardware & software             |           |
 * 工作内容
 ** 下周安排邮储银行余额查询地址变更
    DEADLINE: <2014-09-22 Mon>
@@ -487,4 +518,18 @@ epoll in linux should use NIC with RSS(multi-queue) [[http://www.slideshare.net/
 ** TODO 预算支出进度查询表，业务口径确认
    DEADLINE: <2014-10-08 Wed>
 
+
+** TODO 中科江南业务研讨会 <2014-10-18 Sat>
+曾：精细化管理，开酒店的例子
+高：财政综合业务系统的目的，要基于业务。要定位为业务系统。
+要基于项目管理。滚动预算基于项目，项目管理多维化，维度的可变化。历史数据的对比，要可对比性。
+指标是资金的总控制额度，是高层面上的管理。
+编制、执行、监督三块业务。指标粗，而项目细
+系统中要体现出监督，要监督到明细支出，控制粗，而查询细
+与OA的衔接。
+动态管理，项目、人员。
+杨：规范要通过预算公开来实现
+项目的细分，要分到公开后能被公众理解。
+项目要建立标准化体系。核算内容、核算标准
+将项目库中的内容纳入执行，与项目库本身没有关系。
 
