@@ -396,14 +396,45 @@ source : [[https://github.com/RaymonSHan/content.d/blob/4a2504b6066f7d124e85880b
 (class pointer ->* class function pointer) (argv)  is
 class function (this, argv)
 i have used it in OcciIocp::Protocol.cpp
-*** TODO rewrite memory alloc
+*** DONE rewrite memory alloc *SOURCE* from 10/22-29
+    CLOSED: [2014-10-29 Wed 21:11]
 i make a mistake for InterlockedCompareExchange and __sync_val_compare_and_swap
 have different para order <2014-10-26 Sun>
+<2014-10-28 Tue> a test for multithread memroypool with local cache
+[[https://github.com/RaymonSHan/content.d/blob/8afdb6fcf58dc3f8a8916aa578837ab1d559a9b6/src/rmemory.cpp][source in github]], test for 4 thread in 2cpu, every thread get 15 and free 15 for 5M times
+total for 300M times get and free. second line is second
+the size in table means max number, it will free only reach max.
+16 means all local, 14-8 are almost same
+|  16 |  14 |  12 |  10 |    8 |    6 |    4 |    2 |
+| 4.2 | 9.1 | 8.8 | 8.7 | 11.4 | 17.1 | 21.6 | 40.8 |
+the fast is all local, only 14ns for one GET/FREE. 
+I think in real world 16 local cache is enough.
 *** DONE sample asm inline
     CLOSED: [2014-10-27 Mon 23:14]
 [[http://www.codeproject.com/Articles/15971/Using-Inline-Assembly-in-C-C][asm inline]]
 should use stack for store per thread info
 [[http://stackoverflow.com/questions/1898834/why-would-one-use-movl-1-eax-as-opposed-to-say-movb-1-eax][the useful is b s w l q t]]
+[[https://gcc.gnu.org/onlinedocs/gcc/Simple-Constraints.html#Simple-Constraints][at&t asm use a b c d r m g i ]]
+the asm "movq %0, (%%rax);" which %0 is r, sometime will create "mov %rax,(%rax)", 
+  it create unexpected error. it cost me 2 hours, until disasm it. <2014-10-28 Tue>
+the real reason for above is : i lost set "clobbered register". 
+  i found it until i meet the same problem again. <2014-11-01 Sat>
+*** DONE learn backtrace
+    CLOSED: [2014-11-03 Mon 22:59]
+there are two problem, one for C++ function name, other is line number
+question is [[http://stackoverflow.com/questions/4636456/stack-trace-for-c-using-gcc][here]]
+get source from [[http://cairo.sourcearchive.com/documentation/1.9.8-1/backtrace-symbols_8c-source.html][cairo backtrace_symbols]]
+change __FUNCTION__ to __PRETTY_FUNCTION__ <2014-10-31 Fri>
+use RTrace for myself add function in __TRY & __CATCH <2014-11-01 Sat>
+do my SIGSEGV handle by RTrace <2014-11-01 Sat>
+this is funny for [[http://www.linuxquestions.org/questions/programming-9/sigsegv-handler-segmentation-fauld-handler-277790/][test a valid pointer]]
+*** CONTINUE epoll thread begin read <2014-11-03 Mon> 
+    CLOSED: [2014-11-07 Fri 09:35]
+    add class name by macro, in [[http://stackoverflow.com/questions/3563783/class-name-macro][stackoverflow]]
+*** DONE thread comm
+    CLOSED: [2014-11-07 Fri 21:10]
+[[http://man7.org/linux/man-pages/man2/eventfd.2.html][eventfd]] may useful, finish REvent & RMultiEvent <2014-11-07 Fri>
+timerfd ?
 * linux learning
 ** segment page memory manger follow [[http://blog.csdn.net/macrocrazier/article/details/6705298][csdn marcocrazier]]
 the most thing is slab, it is fit for my program
@@ -480,12 +511,13 @@ epoll in linux should use NIC with RSS(multi-queue) [[http://www.slideshare.net/
 [[http://ld-hust.iteye.com/blog/630941][some blog]] 
 [[http://en.cppreference.com/w/cpp/language/operators][overload operation in c++]]
 * bicycle
-| Date             | Way          | km | min | about                                  |
-|------------------+--------------+----+-----+----------------------------------------|
-| <2014-09-25 Thu> | Around Mudu  | 19 |  55 | for the first time do NOT rest at Mudu |
-| <2014-09-29 Mon> | To Wujiang   | 22 |  68 | follow wind                            |
-| <2014-09-29 Mon> | From Wujiang | 24 |  95 | against wind                           |
-|                  |              |    |     |                                        |
+| Date             | Way            | km | min | about                                  |
+|------------------+----------------+----+-----+----------------------------------------|
+| <2014-09-25 Thu> | Around Mudu    | 19 |  55 | for the first time do NOT rest at Mudu |
+| <2014-09-29 Mon> | To Wujiang     | 22 |  68 | follow wind                            |
+| <2014-09-29 Mon> | From Wujiang   | 24 |  95 | against wind                           |
+| <2014-10-28 Tue> | Around YinCai  |  8 |  25 |                                        |
+| <2014-11-05 Wed> | Around Pri Sch | 11 |  35 |                                        |
 * evalution
 | Date             | Place            | Agent    |   M | What                                         | cost      |
 |------------------+------------------+----------+-----+----------------------------------------------+-----------|
@@ -494,11 +526,13 @@ epoll in linux should use NIC with RSS(multi-queue) [[http://www.slideshare.net/
 | <2014-09-25 Thu> | Service Center   | YuanXing |   3 | Gusu Family Planning Committe, mobile device |           |
 | <2014-09-25 Thu> | Service Center   | ZhengJie |   2 | SZ Middle School(YQ), web app for student    |           |
 | <2014-09-26 Fri> | Wujiang          | WeiKang  | 3.5 | LiLi Hospital Info System                    | 0.5       |
-| <2014-09-29 Mon> | Wujiang          | YingCai  | 4.5 | Wujiang Public Security, car recognition     |           |
+| <2014-09-29 Mon> | Wujiang          | YingCai  | 4.5 | Wujiang Public Security, car recognition     | S : 32    |
 | <2014-10-14 Tue> | 33 Middle School | self     |   8 | Edu bea. Fundation Database of school        |           |
 | <2014-10-15 Wed> | Service Center   | RunFang  |   3 | Pub Security, mobile police                  |           |
 | <2014-10-23 Thu> | Service Center   | JinYuan  |   3 | Pub Security, Project manager                |           |
 | <2014-10-27 Mon> | Service Center   | YuanXing |   3 | Env Monitor, hardware & software             |           |
+| <2014-10-28 Tue> | YingCai          | YingCai  |   3 | Suzhou Newspaper Group, computer * 180       | S : 52    |
+| <2014-11-04 Tue> | Service Center   | YanXing  |   3 | Info. Center, 10G FW                         |           |
 * 工作内容
 ** 下周安排邮储银行余额查询地址变更
    DEADLINE: <2014-09-22 Mon>
@@ -533,3 +567,6 @@ epoll in linux should use NIC with RSS(multi-queue) [[http://www.slideshare.net/
 项目要建立标准化体系。核算内容、核算标准
 将项目库中的内容纳入执行，与项目库本身没有关系。
 
+
+
+http://stackoverflow.com/questions/4636456/stack-trace-for-c-using-gcc
