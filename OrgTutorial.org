@@ -435,6 +435,8 @@ this is funny for [[http://www.linuxquestions.org/questions/programming-9/sigseg
     CLOSED: [2014-11-07 Fri 21:10]
 [[http://man7.org/linux/man-pages/man2/eventfd.2.html][eventfd]] may useful, finish REvent & RMultiEvent <2014-11-07 Fri>
 timerfd ?
+** TODO back to occiiocp for citic erp <2014-11-09 Sun>
+   catch packet in <2014-11-08 Sat>, finish 10002, 10003 for ERP in <2014-11-09 Sun>
 * linux learning
 ** segment page memory manger follow [[http://blog.csdn.net/macrocrazier/article/details/6705298][csdn marcocrazier]]
 the most thing is slab, it is fit for my program
