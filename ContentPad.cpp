@@ -1614,7 +1614,7 @@ long ProcessOneRefer(CContextItem* mContext, CListItem* mBuffer, char* &mStart, 
 	char* referstart, *referend;
 	ContentPad* resultPad = mBuffer->HeadInfo, *namPad;
 	WafaProcessFunction nowFunctin;
-	char* nowstart, *nowend;
+	char* nowstart, *nowend = 0;
 	char* nowkey, *nowloop = NULL;
 	long keylen, loopstrlen, nowkeyfrom;
 	CListItem* referContent;
@@ -1766,16 +1766,40 @@ long ProcessOneRefer(CContextItem* mContext, CListItem* mBuffer, char* &mStart, 
 			else nowkeyfrom = resultPad->serverKeyFrom;
 		}
 	}
+
+	char *nextstart = 0;
 	do 
 	{
-		if (nowloop)			//	move this out of if()
+		if (nowloop)			//	for loop control changed, Nov 17 '14
 		{
-// printf("%d\r\n", nowstart);
 			ret_err = 0;
-			nowstart = memstr(nowstart, nowend-nowstart, nowloop, loopstrlen);
+			nowstart = memstr(nowstart, nowend - nowstart, nowloop, loopstrlen);
 			if (nowstart) isloop = 1;
 			else break;
+			nextstart = memstr(nowstart + loopstrlen, nowend - nowstart - loopstrlen, nowloop, loopstrlen);
+			if (!nextstart) nextstart = nowend;
+
+
+
+// 			ret_err = 0;
+// 			if (!nextstart) nowstart = memstr(nowstart, nowend-nowstart, nowloop, loopstrlen);
+// 			else nowstart = nextstart;
+// 			if (nowstart) isloop = 1;
+// 			else break;
+// 
+// 			nextstart = memstr(nowstart, nowend-nowstart, nowloop, loopstrlen);
+// 			if (!nextstart) nextstart = nowend;
 		}
+		else nextstart = nowend;
+
+
+// 		if (nowloop)			//	move this out of if(referContent)
+// 		{
+// 			ret_err = 0;
+// 			nowstart = memstr(nowstart, nowend-nowstart, nowloop, loopstrlen);
+// 			if (nowstart) isloop = 1;
+// 			else break;
+// 		}
 
 		if (referContent)
 		{
@@ -1792,7 +1816,9 @@ long ProcessOneRefer(CContextItem* mContext, CListItem* mBuffer, char* &mStart, 
 // //	for get client ip, must translate client Context
 // // 			ret = (*nowFunctin)(mBuffer, referContent, nowstart, nowend, nowkey, keylen, nowkeyfrom);
 // 			ret = (*nowFunctin)(mContext, referContent, nowstart, nowend, nowkey, keylen, nowkeyfrom);
-			ret = (*nowFunctin)(mContext, referContent, nowstart, nowend, nowkey, keylen, nowkeyfrom, resultPad);		//	this is Wafa_ function
+
+//			ret = (*nowFunctin)(mContext, referContent, nowstart, nowend, nowkey, keylen, nowkeyfrom, resultPad);		//	this is Wafa_ function
+			ret = (*nowFunctin)(mContext, referContent, nowstart, nextstart, nowkey, keylen, nowkeyfrom, resultPad);		//	for loop control changed, Nov 17 '14
 
 //	add error control in Sept. 15 '13
 			if (ret && resultPad->getLength[PARA_REF_ERROR] != VALUE_NOT_FOUND)
