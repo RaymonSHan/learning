@@ -4,6 +4,8 @@
 #define WAFA
 // #define REDANT
 
+#define FIDDLER_ADDR					// for sangfor vpn use, must set fiddler proxy address
+
 // #define USE_ARGC
 // #define USE_PATH
 #define USE_SERVICE
@@ -30,7 +32,7 @@
 // #define	DEBUG_CONTEXT
 // #define	DEBUG_POST
 // #define	DEBUG_CLOSE
- #define	DEBUG_TCP
+// #define	DEBUG_TCP
 #define	DEBUG_WAFA
 // #define	DEBUG_CONCURRENCY
 // #define	DEBUG_PEER

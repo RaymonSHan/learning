@@ -175,6 +175,11 @@ sockaddr_in AddrForward;
 char LogFile[MAX_PATH];
 // #endif USE_PATH
 
+#ifdef FIDDLER_ADDR
+sockaddr_in FiddlerAddr;
+#endif FIDDLER_ADDR
+
+
 int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 //int _tt(int argc, TCHAR* argv[], TCHAR* envp[])
 {
@@ -182,6 +187,16 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 	OSVERSIONINFO osvi;
 	osvi.dwOSVersionInfoSize = sizeof(osvi);
 	BOOL result;
+
+#ifdef FIDDLER_ADDR
+
+	FiddlerAddr.sin_family = AF_INET;    
+	FiddlerAddr.sin_port = htons(8888);    
+	FiddlerAddr.sin_addr.S_un.S_addr = inet_addr(argv[1]);
+	if (FiddlerAddr.sin_addr.S_un.S_addr != INADDR_NONE)	theService.runProgram();
+	else printf("TEST use only, input ContentPad fiddleraddress,\r\n such as \"ContentPad 192.168.1.5\"\r\n ");
+	return 0;
+#endif FIDDLER_ADDR
 
 	result = GetVersionEx(&osvi);
 	if (result && osvi.dwPlatformId >= VER_PLATFORM_WIN32_NT)

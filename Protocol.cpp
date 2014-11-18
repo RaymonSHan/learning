@@ -863,9 +863,24 @@ long CTCPProtocol::PostAccept(CContextItem* mContext, CListItem* &mBuffer, long 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	For TCP, PostConnect is ConnectEx																								//
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////		//
+#ifdef FIDDLER_ADDR
+extern sockaddr_in FiddlerAddr;	// value is argv[1]
+#endif FIDDLER_ADDR
+
 long CTCPProtocol::PostConnect(CContextItem* mContext, CListItem* &mBuffer, long size, long op)									//
-{																																	//
+{
+#ifdef FIDDLER_ADDR																																	//
+//	Remote this for Sangfor SSL VPN test, send to proxy
+//	sockaddr_in sangfor;
+//	sangfor.sin_family = AF_INET;    
+//	sangfor.sin_port = htons(8888);    
+//	sangfor.sin_addr.S_un.S_addr = inet_addr("10.32.209.107");		// at office
+	//sangfor.sin_addr.S_un.S_addr = inet_addr("192.168.1.106");	// at home
+	sockaddr_in *addr = &FiddlerAddr;
+#else FIDDLER_ADDR
 	sockaddr_in* addr = (sockaddr_in*)&(((CTCPContext*)mContext)->addrServer);														//
+#endif FIDDLER_ADDR
+
 	long ret_err = 0x01;																											//
 	BOOL ret;																														//
 																																	//

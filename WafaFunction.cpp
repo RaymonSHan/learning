@@ -896,6 +896,7 @@ long Wafa_LoopPrint(CContextItem* mContext, CListItem* &referContent, char* star
 
 long AddtoContentList(CContextItem* mContext, CListItem* &mBuffer, char* name)
 {
+	printf("add content list: %s, %p\r\n", name, mBuffer);
 //	It should be single thread for same CLIENT context, for ServerRead may return at the same time	
 	static volatile MYINT	InContentProcess = MARK_NOT_IN_PROCESS;		//	Add concurrency control May 01 '14						//
 

@@ -305,6 +305,7 @@ long CContentPadServer::OnServerRead(CContextItem* mContext, CListItem* &mBuffer
 		ret_err = 0x30;
 		mBuffer = ProcessFullCommand(mContext, mBuffer, size);
 // 		if (mBuffer->NProcessSize < 0) break;
+
 		if (mBuffer->NProcessSize & 0x10000000) 
 			break;
 
@@ -328,14 +329,33 @@ long CContentPadServer::OnServerRead(CContextItem* mContext, CListItem* &mBuffer
 			if (mContext->ContentMode == CONTENT_MODE_LENGTH)
 			{
 				tpointer = memstr(REAL_BUFFER(mBuffer), mBuffer->BufferType->BufferSize, NASZ("\r\n\r\n"));
-				if (tpointer)
+// In Nov 9 '14, After concurrency, here may error, for may add SHEAD more than once, 
+// use the old var OldPeer to save the last peer context, every context only save SHEAD once. 
+// the if (tpointer) line meet the same thing, but that time, server do not return \r\n\r\n again in body
+// in occiiocp memory alloc, peer will not same in few time, because of the free context add to tail.
+//				if (tpointer)			// remove in Nov 9 '14
+
+//				if (tpointer && (cliContext->OldPeer != cliContext->PPeer))		// remove in Nov 10 '14
+//				{
+//					cliContext->OldPeer = cliContext->PPeer;
+//					// above add in Nov 9 '14
+
+				char sheadname[NORMAL_CHAR] = "SHEA";
+				int snamelen = strlen(mContext->ServerName);
+				memcpy(&sheadname[4], mContext->ServerName, snamelen);
+// above add in Nov 10 '14
+
+				if (tpointer && !GetContentByName(cliContext, sheadname, 4+snamelen))
 				{
 					mBuffer->NProcessSize = tpointer - REAL_BUFFER(mBuffer);				//	for SHEAD use, should set NProcessSize, it is a lazy way.
 
 					//	Here means, this is POST head. add POST head to content link
 					headBuffer = mContext->PApplication->GetApplicationBuffer();
 					if (!headBuffer) break;
- 					AddtoContentList(cliContext, mBuffer, CONTENT_NAME_SERVERHAED);		//	should add to client side Sept 09 '13
+
+// 					AddtoContentList(cliContext, mBuffer, CONTENT_NAME_SERVERHAED);		//	should add to client side Sept 09 '13	// remove in Nov 10 '14
+					AddtoContentList(cliContext, mBuffer, sheadname);					//	replace above in Nov 10 '14
+
 					mBuffer = headBuffer;
 				}
 			}
@@ -1134,7 +1154,8 @@ long ProcessWafaDefine(CContextItem* mContext, CListItem* &mBuffer, char* define
 		if (oldSerContext) oldSerContext->PPeer = oldSerContext;
 		mContext->PPeer = serContext;
 		serContext->PPeer = mContext;
-		serContext->OldPeer = oldSerContext;
+//		serContext->OldPeer = oldSerContext;			// remove this in Nov 9 '14, for here is the only use OldPeer
+														// OldPeer is used in another place, to Add SHEAD content only once
 #ifdef	DEBUG_PEER
 	printf("Different addr, use new Context\r\n");
 #endif	DEBUG_PEER
