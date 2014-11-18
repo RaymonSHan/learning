@@ -335,6 +335,7 @@ public:																																//
 };																																	//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef WINPCAP_FUNCTION
 struct	pcap_pkthdr;
 struct	pcap_if;
 struct	pcap;
@@ -361,7 +362,7 @@ public:																																//
 // 	long	PostSend(CContextItem* mContext, CListItem* &mBuffer, long size, long op, long opSide);								//
 // 	long	PostReceive(CContextItem* mContext, CListItem* &mBuffer, long size, long op, long opSide);								//
 };																																	//
-
+#endif WINPCAP_FUNCTION
 
 // class CTunnelProtocol : public CIPProtocol																							//
 // {																																	//

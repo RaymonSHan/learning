@@ -27,6 +27,7 @@
 // #define QRCODE_FUNCTION
 // #define	PROXY_FUNCTION
 // #define CONFIRMDNS_FUNCTION
+// #define WINPCAP_FUNCTION
 
 // #define	DEBUG_BUFFER
 // #define	DEBUG_CONTEXT
@@ -109,7 +110,7 @@
 //	For Non-Directly Free MEMORYLIST, the timeout value																				//
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////		//
 #define TIMEOUT_INFINITE			(1<<30)																							//
-#define TIMEOUT_TCP					20							//	change for Catch, and now ContentPad only active one connect, it is enough	//	Apr. 28 '14
+#define TIMEOUT_TCP					60							//	change for Catch, and now ContentPad only active one connect, it is enough	//	Apr. 28 '14
 #define	TIMEOUT_TCPCONNECT			5							//	after connect, no respond from server will close soon			//
 #define TIMEOUT_UDP					10																								//
 #define TIMEOUT_FILE				4																								//

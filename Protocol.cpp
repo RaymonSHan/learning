@@ -1,6 +1,8 @@
 
 #include	"stdafx.h"
+#ifdef WINPCAP_FUNCTION
 #include	<pcap.h>			//	Jul. 7 '14 for WinpCap add
+#endif WINPCAP_FUNCTION
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1320,6 +1322,7 @@ long CSingleUDPProtocol::PostReceive(CContextItem* mContext, CListItem* &mBuffer
 	return 0;
 }
 
+#ifdef WINPCAP_FUNCTION
 long CWinPCapProtocol::InitWinPCap()
 {
 	char errbuf[PCAP_ERRBUF_SIZE];
@@ -1342,6 +1345,7 @@ long CWinPCapProtocol::CreateNew(CContextItem* mContext, void* para, long size)	
 {
 	return 0;
 }
+#endif WINPCAP_FUNCTION
 
 __int64 GetFileContextLength(CContextItem* mContext)
 {

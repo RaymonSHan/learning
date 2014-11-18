@@ -941,8 +941,15 @@ long ProcessWafaDefine(CContextItem* mContext, CListItem* &mBuffer, char* define
 
 		if (bufPad->getLength[4] != VALUE_NOT_FOUND)		// have key
 		{
-			indexnumber = ASCII_DEC[*(keyplace+2)] * 10 + ASCII_DEC[*(keyplace+3)];
-			indexvalue = (long)referContent->HeadInfo->resultKey[indexnumber];
+//			indexnumber = ASCII_DEC[*(keyplace+2)] * 10 + ASCII_DEC[*(keyplace+3)];
+//			indexvalue = (long)referContent->HeadInfo->resultKey[indexnumber];
+// above two line removed in Nov 14 '14 for change to Wafa_Compare to compare condition
+			indexvalue = Wafa_Compare(mContext, referContent, NULL, NULL, keyplace, bufPad->getLength[4], 0, NULL);
+			if (indexvalue == VALUE_NOT_FOUND)			// old format %v??,
+			{
+				indexnumber = ASCII_DEC[*(keyplace+2)] * 10 + ASCII_DEC[*(keyplace+3)];
+				indexvalue = (long)referContent->HeadInfo->resultKey[indexnumber];
+			}
 		}
 
 		if (bufPad->getLength[4] == VALUE_NOT_FOUND || !indexvalue)			// without condition or condition is ok(0), restart;

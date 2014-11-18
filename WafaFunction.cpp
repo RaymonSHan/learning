@@ -486,27 +486,37 @@ long Wafa_Assign (CContextItem* mContext, CListItem* &referContent, char* start,
 	ContentPad* resultPad = referContent->HeadInfo;
 	char* nowkey;
 	long nowlen;
+	long notset = 0;										// if not found ::, set to 1, DO NOT change the val	// Nov. 14 '14
 
 	equval = memstr(key, keyLen, NASZ("??"));
 	if (!equval) return VALUE_NOT_FOUND;
 	equval += 2;
 
 	unequval = memstr(equval, keyend-equval, NASZ("::"));
-	if (!unequval) return VALUE_NOT_FOUND;
-	unequval += 2;
+//	if (!unequval) return VALUE_NOT_FOUND;					// for without :: // Nov. 14 '14
+//	unequval += 2;
+	if (!unequval)
+	{
+		unequval = keyend;
+		notset = 1;											// MUST set this, "??xx::" means set NULL while false, "??xx" means not set while false
+	}
+	else unequval += 2;
 
 	isequ = Wafa_Compare(mContext, referContent, start, end, key, equval-key-2, keyFrom, infoPad);
 	if (isequ==VALUE_NOT_FOUND) return VALUE_NOT_FOUND;
 
-	if (isequ)		// not equal
+	if (isequ)		// not OK, use var after ::
 	{
+		if (notset) return 0;								// not found ::, not set val	// Nov. 14 '14
 		nowkey = unequval;
 		nowlen = keyend-unequval;
 	}
-	else			// equal
+	else			// OK, use var before ::
 	{
 		nowkey = equval;
-		nowlen = unequval-equval-2;
+//		nowlen = unequval-equval-2;					// a little bug for not sub 2 without ::	// Nov 16 '14
+		nowlen = unequval - equval;
+		if (!notset) nowlen -= 2;
 	}
 
 //	Change to AddReferPlace		//	May 24 '14
@@ -536,7 +546,7 @@ long Wafa_Compare (CContextItem* mContext, CListItem* &referContent, char* start
 	char* firstkey = key, *firstend;
 	char* secondkey, *secondend = key+keyLen;
 
-	int cmpmode = 0;		// 1 for ==, /*2 for <, 3 for <=, 4 for >, 5 for >=,*/ 6 for !=
+	int cmpmode = 0;		// 1 for ==, /*2 for <<, 3 for <=, 4 for >>, 5 for >=,*/ 6 for !=
 	int returnequ = 0;			// 0 for is OK, 1 for not OK
 
 	char firstval[MAX_COOKIE];

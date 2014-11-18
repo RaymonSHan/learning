@@ -123,8 +123,8 @@ struct	ProtocolId;
 #pragma comment (lib, "iphlpapi.lib")		//	for SendARP
 #pragma comment (lib, "libeay32.lib")																								//
 #pragma comment (lib, "ssleay32.lib")
-#pragma comment (lib, "wpcap.lib")
-#pragma comment (lib, "Packet.lib")
+//#pragma comment (lib, "wpcap.lib")
+//#pragma comment (lib, "Packet.lib")
 // #pragma comment (lib, "zlib.lib")
 
 #ifdef	QRCODE_FUNCTION

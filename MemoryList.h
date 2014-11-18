@@ -40,7 +40,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	In ReadFileScatter and WriteFileGather which use FILE_SEGMENT_ELEMEN struct, this is the MAX number of useful PAGE				// 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////		//
-#define FILE_SEGMENT_NUMBER			100																								//
+#define FILE_SEGMENT_NUMBER			256																								//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	Every I/O use buffer to storage data. The following is the default buffer size.													//
 //	SMALL_BUFFER_SIZE should large than MTU, which is 1536, Now 10 times large														//
@@ -196,7 +196,7 @@ typedef struct ContentPad
 	char		serverName[SMALL_CHAR];							//	for define
 	char		serverKey[8192];								//	for define & refer		// have to so large for POST Key
 	char		serverReferer[MAX_URL*4];						//	for define
-	char		serverCookie[SMALL_CHAR];						//	for define
+	char		serverCookie[MAX_URL];						//	for define
 	char		serverReferName[SMALL_CHAR];					//	for define & refer
 
 	char		serverStartName[SMALL_CHAR];					//	for refer
