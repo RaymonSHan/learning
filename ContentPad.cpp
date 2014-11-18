@@ -987,6 +987,28 @@ long ProcessWafaDefine(CContextItem* mContext, CListItem* &mBuffer, char* define
 		break;
 	}
 
+	ret_err = 0x68;								//	add this define in Nov. 18 '14 for simple wafascript
+	if (!memcmp(bufPad->serverMethod, NASZ("ADDPAGE")))
+	{
+		ret_err = 0x69;
+		AddtoContentList(mContext, serBuffer, bufPad->serverName);
+		ProcessOneVar(mContext, referContent->HeadInfo, tpointer, bufPad->serverAction, bufPad->serverAction+bufPad->getLength[0]);
+		serBuffer->NProcessSize = tpointer-REAL_BUFFER(serBuffer);
+
+		wafaStart = memstr(cliPad->checkStart, cliPad->checkEnd-cliPad->checkStart, NASZ(WAFA_DEFINE_START));
+		cliPad->checkStart = wafaStart + sizeof(WAFA_DEFINE_START);		//	step wafadefine
+		// 		PREPARE_DEFINE(FALSE)
+		PrepareDefine(mContext, usedBuffer, cliPad, 0, wafaStart, wafaEnd);
+
+		// 		if (!wafaStart || !wafaEnd) PrepareReply(mContext, usedBuffer, cliPad, 0, wafaStart, wafaEnd);	//	Move into PrepareDefine	// May 01 '14
+		//	have not test, but I think it should add
+//		mContext->PApplication->FreeApplicationBuffer(serBuffer);						// should add this? it lost buffer before add this, Apr. 25 '14
+		ret_err = 0;
+		break;
+	}
+
+
+
 	ret_err = 0x70;
 	if (!memcmp(bufPad->serverMethod, NASZ("SELECT")))
 	{
@@ -1778,17 +1800,6 @@ long ProcessOneRefer(CContextItem* mContext, CListItem* mBuffer, char* &mStart, 
 			else break;
 			nextstart = memstr(nowstart + loopstrlen, nowend - nowstart - loopstrlen, nowloop, loopstrlen);
 			if (!nextstart) nextstart = nowend;
-
-
-
-// 			ret_err = 0;
-// 			if (!nextstart) nowstart = memstr(nowstart, nowend-nowstart, nowloop, loopstrlen);
-// 			else nowstart = nextstart;
-// 			if (nowstart) isloop = 1;
-// 			else break;
-// 
-// 			nextstart = memstr(nowstart, nowend-nowstart, nowloop, loopstrlen);
-// 			if (!nextstart) nextstart = nowend;
 		}
 		else nextstart = nowend;
 
@@ -1954,6 +1965,7 @@ long ProcessOneVar(CContextItem* mContext, ContentPad* hInfo, char* &mStart, cha
 	ContentPad* resultPad = hInfo, *otherPad = 0;
 	unsigned char idn, firstn, secondn;
 	long translateSpace, translateHtml, translatePost;
+	long removeCR;
 	long trantoGB, trantoUTF;
 	long tranQRCode;
 	char *tranpoint;
@@ -2001,6 +2013,7 @@ long ProcessOneVar(CContextItem* mContext, ContentPad* hInfo, char* &mStart, cha
 		translatePost = FALSE;
 		trantoGB = trantoUTF = FALSE;
 		tranQRCode = FALSE;
+		removeCR = FALSE;
 
 		varnow = (char*)memchr(varstart, '%', varend-varstart);
 		if (!varnow) varnow = varend;
@@ -2050,6 +2063,11 @@ long ProcessOneVar(CContextItem* mContext, ContentPad* hInfo, char* &mStart, cha
 			{
 				indexnumber = ASCII_DEC[firstn] * 10 + ASCII_DEC[secondn];
 				translateSpace = TRUE;
+			}
+			else if (idn=='c')				//	remove 0xd 0xa;
+			{
+				indexnumber = ASCII_DEC[firstn] * 10 + ASCII_DEC[secondn];
+				removeCR = TRUE;
 			}
 			else if (idn=='t')				// remove html format <>
 			{
@@ -2196,6 +2214,16 @@ long lthischar;
 						copysize = 0;
 						GB2312toUTF8((PUCHAR)resultPad->resultKey[indexnumber], resultPad->getLength[indexnumber], (PUCHAR)mStart, copysize);
 						mStart += copysize;
+					}
+					else if (removeCR)			// add rmove in Nov 18 '14
+					{
+						tranpoint = resultPad->resultKey[indexnumber];
+						for (i=0; i<resultPad->getLength[indexnumber]; i++)
+						{
+							if ((*isblank == 0xd) || (*isblank == 0xa)) isblank++;
+							else *mStart++ = *isblank++;
+						}
+
 					}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef	QRCODE_FUNCTION
