@@ -54,7 +54,8 @@ C-x o : switch window
    CLOSED: [2014-09-06 Sat 02:07] 
 *** init 
 git config --global user.name "Raymon SHan" 
-git config --global user.email "quickhorse77@gmail.com" git init 
+git config --global user.email "quickhorse77@gmail.com" 
+git init 
 *** add/delete file and commit 
 git add filename git rm filename 
 git commit -m "sometext" 
@@ -436,7 +437,18 @@ this is funny for [[http://www.linuxquestions.org/questions/programming-9/sigseg
 [[http://man7.org/linux/man-pages/man2/eventfd.2.html][eventfd]] may useful, finish REvent & RMultiEvent <2014-11-07 Fri>
 timerfd ?
 ** TODO back to occiiocp for citic erp <2014-11-09 Sun>
-   catch packet in <2014-11-08 Sat>, finish 10002, 10003 for ERP in <2014-11-09 Sun>
+catch packet in <2014-11-08 Sat>, finish 10002, 10003 for ERP in <2014-11-09 Sun>
+  the most crazy is sangfor ssl vpn do not support my program, i think it is Connectex, i have to use fiddler proxy
+in <2014-11-09 Sun> the crazy thing is ContentPad add SHEAD more than once. after 3 hours debug, I found
+  CNoneApplication::OnServerRead call CContentPad::OnServerRead in CONTENT_MODE_LENGTH, with NProcessSize == 0, 
+  when it received data. It only happened in Content-Length mode, not ni Chunk mode
+in <2014-11-10 Mon> finish 20001 and 20002, and change SHEAD to SHEA-contentanme
+** TODO goon epoll test
+*** reread my code <2014-12-31 Wed>
+** TODO read redis <2015-01-11 Sun>
+** TODO read libev, libevent, libuv <2015-01-15 Thu>
+** TODO prepare for iocp in linux <2015-01-16 Fri>
+
 * linux learning
 ** segment page memory manger follow [[http://blog.csdn.net/macrocrazier/article/details/6705298][csdn marcocrazier]]
 the most thing is slab, it is fit for my program
@@ -474,6 +486,114 @@ remap_file_pages() ?? not use
 ** CONTINUE read [[http://www.win.tue.nl/~aeb/linux/lk/lk.html%20%20][linux kernel]] only a fast review
    CLOSED: [2014-10-13 Mon 14:03]
 'strip' utility removes the symbol table
+* Redis
+** Command [[http://redis.io/commands][redis commands]]
+*** Connected
+PING / PONG
+SELECT / config get databases for list
+** useful link
+[[http://labs.alcacoop.it/doku.php?id%3Darticles:redis_land][Very begin, relation to set]]
+[[http://www.rediscookbook.org/][Redis cookbook]]
+[[http://vdisk.weibo.com/s/ACnSNeFyxHO1][The disign and implementation of Redis]] book only few chapter
+[[http://events.linuxfoundation.org/sites/events/files/alss13_gregkh.pdf][kdbus ?]]
+[[http://libev.schmorp.de/bench.html][bench for libev & libevent]]
+[[http://doc.dvgu.ru/devel/ev.html][libev]]
+[[http://comments.gmane.org/gmane.comp.lib.ev/2353][libev support file via pipes/stdin]]
+** Source
+<2015-01-13 Tue>
+version.h                                                               记录了 Redis 的版本号。"2.9.11"
+fmacros.h                                                               一些移植性方面的宏。
+asciilogo.h                                                             保存了 Redis 的 ASCII LOGO 。
+help.h                                                                  utils/generate-command-help.rb 程序自动生成的命令帮助信息。
+util.c, util.h                                                          各种辅助函数。
+rand.c, rand.h                                                          伪随机数生成器。
+crc16.c, crc64.c, crc64.h                                               计算 CRC 校验和。
+endianconv.c, endianconv.h                                              二进制的大端、小端转换函数。
+redisassert.h                                                           Redis 自建的断言系统。
+sha1.c, sha1.h                                                          SHA1 校验和计算函数。
+
+sds.c, sds.h                                                            SDS 数据结构的实现，SDS 为 Redis 的默认字符串表示。
+adlist.c, adlist.h                                                      双端链表数据结构的实现。
+dict.c, dict.h                                                          字典数据结构的实现。
+[[http://graphics.stanford.edu/~seander/bithacks.html][useful bit hacks]]
+intset.c, intset.h                                                      整数集合数据结构的实现，用于优化 SET 类型。
+hyperloglog.c          // NOT read program                              HyperLogLog 数据结构的实现。
+[[http://blog.codinglabs.org/articles/cardinality-estimate-exper.html][hyper loglog]]           // I only know, what is LC, LLC, AC, HLLC
+ziplist.c,  ziplist.h                                                   ZIPLIST 数据结构的实现，用于优化 LIST 类型。
+zipmap.c,  zipmap.h                                                     ZIPMAP 数据结构的实现，在 Redis 2.6 以前用与优化 HASH 类型， Redis 2.6 开始已经废弃。
+zmalloc.c,  zmalloc.h                                                   内存管理程序。
+<2015-01-14 Wed>
+object.c                                                                Redis 的对象系统实现。
+anet.c, anet.h                                                          Redis 的异步网络框架，内容主要为对 socket 库的包装。
+bio.c, bio.h                                                            Redis 的后台 I/O 程序，用于将 I/O 操作放到子线程里面执行， 减少 I/O 操作对主线程的阻塞。
+rio.c, rio.h                                                            Redis 对文件 I/O 函数的包装， 在普通 I/O 函数的基础上增加了显式缓存、以及计算校验和等功能。
+ae.c, ae.h, ae_epoll.c, ae_evport.c, ae_kqueue.c, ae_select.c           事件处理器，以及各个具体实现。
+
+db.c                                                                    数据库实现。
+
+
+redis.c                                                                 负责服务器的启动、维护和关闭等事项。
+
+
+
+networking.c	Redis 的客户端网络操作库， 用于实现命令请求接收、发送命令回复等工作， 文件中的函数大多为 write 、 read 、 close 等函数的包装， 以及各种协议的分析和构建函数。
+
+
+
+t_hash.c, t_list.c, t_set.c, t_string.c, t_zset.c                       定义了 Redis 的各种数据类型，以及这些数据类型的命令。
+
+
+
+
+syncio.c	同步 I/O 操作。
+
+
+
+
+aof.c	AOF 功能的实现。
+
+
+bitops.c	二进制位操作命令的实现文件。
+blocked.c	用于实现 BLPOP 命令和 WAIT 命令的阻塞效果。
+cluster.c 、 cluster.h	Redis 的集群实现。
+config.c 、 config.h	Redis 的配置管理实现，负责读取并分析配置文件， 然后根据这些配置修改 Redis 服务器的各个选项。
+debug.c	调试实现。
+
+lzf_c.c 、 lzf_d.c 、 lzf.h 、 lzfP.h	Redis 对字符串和 RDB 文件进行压缩时使用的 LZF 压缩算法的实现。
+Makefile 、 Makefile.dep	构建文件。
+memtest.c	内存测试。
+mkreleasehdr.sh	用于生成释出信息的脚本。
+multi.c	Redis 的事务实现。
+
+notify.c	Redis 的数据库通知实现。
+
+pqsort.c 、 pqsort.h	快速排序（QuickSort）算法的实现。
+pubsub.c	发布与订阅功能的实现。
+
+rdb.c 、 rdb.h	RDB 持久化功能的实现。
+
+redis-benchmark.c	Redis 的性能测试程序。
+
+redis-check-aof.c 、 redis-check-dump.c	RDB 文件和 AOF 文件的合法性检查程序。
+redis-cli.c	Redis 客户端的实现。
+redis.h	Redis 的主要头文件，记录了 Redis 中的大部分数据结构， 包括服务器状态和客户端状态。
+redis-trib.rb	Redis 集群的管理程序。
+release.c 、 release.h	记录和生成 Redis 的释出版本信息。
+replication.c	复制功能的实现。
+
+scripting.c	脚本功能的实现。
+
+sentinel.c	Redis Sentinel 的实现。
+setproctitle.c	进程环境设置函数。
+
+slowlog.c 、 slowlog.h	慢查询功能的实现。
+solarisfixes.h	针对 Solaris 系统的补丁。
+sort.c	SORT 命令的实现。
+
+testhelp.h	测试辅助宏。
+
+valgrind.sup	valgrind 的suppression文件。
+
 * should do things
 ** TODO should reread segment manager in linux
 ** TODO may read [[http://ergoemacs.org/emacs/emacs_keybinding_redesign.html][emacs keybinding setting]]
@@ -512,29 +632,67 @@ epoll in linux should use NIC with RSS(multi-queue) [[http://www.slideshare.net/
 ** other
 [[http://ld-hust.iteye.com/blog/630941][some blog]] 
 [[http://en.cppreference.com/w/cpp/language/operators][overload operation in c++]]
+** Greatwall
+https://github.com/greatfire/wiki/ mirror of some page
+https://code.google.com/p/program-think/wiki/Books bbok of some other
+https://www.torproject.org/download/download-easy.html download tor
+
 * bicycle
-| Date             | Way            | km | min | about                                  |
-|------------------+----------------+----+-----+----------------------------------------|
-| <2014-09-25 Thu> | Around Mudu    | 19 |  55 | for the first time do NOT rest at Mudu |
-| <2014-09-29 Mon> | To Wujiang     | 22 |  68 | follow wind                            |
-| <2014-09-29 Mon> | From Wujiang   | 24 |  95 | against wind                           |
-| <2014-10-28 Tue> | Around YinCai  |  8 |  25 |                                        |
-| <2014-11-05 Wed> | Around Pri Sch | 11 |  35 |                                        |
+| Date             | Way                  | km | min | about                                  |
+|------------------+----------------------+----+-----+----------------------------------------|
+| <2014-09-25 Thu> | Around Mudu          | 19 |  55 | for the first time do NOT rest at Mudu |
+| <2014-09-29 Mon> | To Wujiang           | 22 |  68 | follow wind                            |
+| <2014-09-29 Mon> | From WuJiang         | 24 |  95 | against wind                           |
+| <2014-10-28 Tue> | Around YinCai        |  8 |  25 |                                        |
+| <2014-11-05 Wed> | Around Pri Sch       | 11 |  35 |                                        |
+| <2014-11-14 Fri> | Around RunFang       | 10 |  30 |                                        |
+| <2014-11-21 Fri> | Around YinCai        |  8 |  25 |                                        |
+| <2014-11-25 Tue> | To WuZhong & WuJiang | 25 |  90 |                                        |
+| <2014-11-25 Tue> | From WuJiang         | 22 | 120 | so tried                               |
+
 * evalution
-| Date             | Place            | Agent    |   M | What                                         | cost      |
-|------------------+------------------+----------+-----+----------------------------------------------+-----------|
-| before           |                  |          |  16 |                                              | about 1.5 |
-| <2014-09-24 Wed> | Service Center   | YuanXing |   3 | Procuratorate, specail people control        |           |
-| <2014-09-25 Thu> | Service Center   | YuanXing |   3 | Gusu Family Planning Committe, mobile device |           |
-| <2014-09-25 Thu> | Service Center   | ZhengJie |   2 | SZ Middle School(YQ), web app for student    |           |
-| <2014-09-26 Fri> | Wujiang          | WeiKang  | 3.5 | LiLi Hospital Info System                    | 0.5       |
-| <2014-09-29 Mon> | Wujiang          | YingCai  | 4.5 | Wujiang Public Security, car recognition     | S : 32    |
-| <2014-10-14 Tue> | 33 Middle School | self     |   8 | Edu bea. Fundation Database of school        |           |
-| <2014-10-15 Wed> | Service Center   | RunFang  |   3 | Pub Security, mobile police                  |           |
-| <2014-10-23 Thu> | Service Center   | JinYuan  |   3 | Pub Security, Project manager                |           |
-| <2014-10-27 Mon> | Service Center   | YuanXing |   3 | Env Monitor, hardware & software             |           |
-| <2014-10-28 Tue> | YingCai          | YingCai  |   3 | Suzhou Newspaper Group, computer * 180       | S : 52    |
-| <2014-11-04 Tue> | Service Center   | YanXing  |   3 | Info. Center, 10G FW                         |           |
+| Date             | Place            | Agent      |   M | What                                         | cost      |
+|------------------+------------------+------------+-----+----------------------------------------------+-----------|
+| before 4 time    |                  |            |  16 |                                              | about 1.5 |
+| <2014-09-24 Wed> | Service Center   | YuanXing   |   3 | Procuratorate, specail people control        |           |
+| <2014-09-25 Thu> | Service Center   | YuanXing   |   3 | Gusu Family Planning Committe, mobile device |           |
+| <2014-09-25 Thu> | Service Center   | ZhengJie   |   2 | SZ Middle School(YQ), web app for student    |           |
+| <2014-09-26 Fri> | WuJiang          | WeiKang    | 3.5 | LiLi Hospital Info System                    | 0.5       |
+| <2014-09-29 Mon> | WuJiang          | YingCai    | 4.5 | WuJiang Public Security, car recognition     | S : 32    |
+| <2014-10-14 Tue> | 33 Middle School | self       |   8 | Edu bea. Fundation Database of school        |           |
+| <2014-10-15 Wed> | Service Center   | RunFang    |   3 | Pub Security, mobile police                  |           |
+| <2014-10-23 Thu> | Service Center   | JinYuan    |   3 | Pub Security, Project manager                |           |
+| <2014-10-27 Mon> | Service Center   | YuanXing   |   3 | Env Monitor, hardware & software             |           |
+| <2014-10-28 Tue> | YingCai          | YingCai    |   3 | SuZhou Newspaper Group, computer * 180       | S : 52    |
+| <2014-11-04 Tue> | Service Center   | YuanXing   |   3 | Info. Center, 10G FW                         |           |
+| <2014-11-10 Mon> | YuanXing         | YuanXing   |   8 | self, tax guarantee Hardware scheme          |           |
+| <2014-11-12 Wed> | KunShan          | DingXin    | 4.5 | JinXi community monitoring                   | 1         |
+| <2014-11-13 Thu> | Audit beau.      | self       |   5 | audit info                                   |           |
+| <2014-11-14 Fri> | RunFang          | RunFang    |   2 | Suzhou Pub Security, intranet monitor        |           |
+| <2014-11-20 Thu> | Service Center   | ZhongCheng |   3 | YuanQu Tech School, tech edu                 |           |
+| <2014-11-21 Fri> | YinCai           | YinCai     |   2 | SuZhou Pub Security, 3 forprice              |           |
+| <2014-11-25 Tue> | WuZhong          | ZhongCheng |   3 | ZhouShan community monitoring                |           |
+| <2014-11-25 Tue> | WuJiang          | WeiYuan    | 4.5 | WuJiang Secure Supervise, Hardware           | 0.5       |
+| <2014-11-27 Thu> | Service Center   | JingGang   |   3 | Suzhou Env Safe, Hardware                    | S : 90    |
+| <2014-12-01 Mon> | Service Center   | YuanXing   |   3 | Suzhwou Accumulation Fund, Hardware          |           |
+| <2014-12-02 Tue> | MuDu             | ZhongCheng |   2 | MuDu No3 Pri School, Computer * 25           | 0.5       |
+| <2014-12-05 Fri> | WeiKang          | WeiKang    |   2 | HiTec Sec&Tech bea, Software                 |           |
+| <2014-12-09 Tue> | WuZhong          | ChuangJie  |   3 | YueXi Pri School, Furture Class              | 1.5       |
+| <2014-12-09 Tue> | YuanXing         | YuanXing   |   3 | XinQu Mid School, Movie Player               |           |
+| <2014-12-11 Thu> | XiangCheng       | WeiYuan    |   2 | YuYao Pri School, E-broad                    |           |
+| <2014-12-16 Tue> | KunShan          | JSHaiWai   |   5 | ChengXi community monitoring                 |           |
+| <2014-12-18 Thu> | Service Center   | LongHua    |   3 | Suzhou Travel Bureau, Facebook               | 3 hours   |
+| <2014-12-23 Tue> | KunShan          |            |   8 | 1 abandoned, 2 forprice, 1 single, 2 query   |           |
+| <2014-12-26 Fri> | Service Center   | WeiKang    |   3 | Suzhou Sce. Col.                             | S : 124   |
+|                  |                  |            |     |                                              |           |
+* evalition2015
+| Date             | Place             | Agent    |   M | What                                     | cost |
+|------------------+-------------------+----------+-----+------------------------------------------+------|
+| <2015-01-06 Tue> | Service Center    | YuanXing |   3 | self, tax guarantee Hardware             |      |
+| <2015-01-08 Thu> | Property Exchange | self     |  10 | self, exchange software                  |      |
+| <2015-01-15 Thu> | KunShan           | JSHaiWai | 4.5 | BaoCheng community monitoring            |  1.5 |
+| <2015-01-20 Tue> | Service Center    | RunFang  |   3 | Suzhou Public Security, population score |      |
+| <2015-01-29 Thu> | Service Center    | YuanXing |   2 | Procuratorate, monitor                   |      |
 * 工作内容
 ** 下周安排邮储银行余额查询地址变更
    DEADLINE: <2014-09-22 Mon>
