@@ -686,13 +686,14 @@ https://www.torproject.org/download/download-easy.html download tor
 | <2014-12-26 Fri> | Service Center   | WeiKang    |   3 | Suzhou Sce. Col.                             | S : 124   |
 |                  |                  |            |     |                                              |           |
 * evalition2015
-| Date             | Place             | Agent    |   M | What                                     | cost |
-|------------------+-------------------+----------+-----+------------------------------------------+------|
-| <2015-01-06 Tue> | Service Center    | YuanXing |   3 | self, tax guarantee Hardware             |      |
-| <2015-01-08 Thu> | Property Exchange | self     |  10 | self, exchange software                  |      |
-| <2015-01-15 Thu> | KunShan           | JSHaiWai | 4.5 | BaoCheng community monitoring            |  1.5 |
-| <2015-01-20 Tue> | Service Center    | RunFang  |   3 | Suzhou Public Security, population score |      |
-| <2015-01-29 Thu> | Service Center    | YuanXing |   2 | Procuratorate, monitor                   |      |
+| Date             | Place             | Agent    |   M | What                                     | cost     |
+|------------------+-------------------+----------+-----+------------------------------------------+----------|
+| <2015-01-06 Tue> | Service Center    | YuanXing |   3 | self, tax guarantee Hardware             |          |
+| <2015-01-08 Thu> | Property Exchange | self     |  10 | self, exchange software                  |          |
+| <2015-01-15 Thu> | KunShan           | JSHaiWai | 4.5 | BaoCheng community monitoring            | 1.5      |
+| <2015-01-20 Tue> | Service Center    | RunFang  |   3 | Suzhou Public Security, population score |          |
+| <2015-01-29 Thu> | Service Center    | YuanXing |   2 | Procuratorate, monitor                   | S : 22.5 |
+| <2015-02-13 Fri> | Service Center    | RunFang  |   2 | Rail Transit, monitor                    |          |
 * 工作内容
 ** 下周安排邮储银行余额查询地址变更
    DEADLINE: <2014-09-22 Mon>
