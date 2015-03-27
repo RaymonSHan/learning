@@ -520,7 +520,7 @@ long CNoneApplication::OnServerWrite(CContextItem* mContext, CListItem* &mBuffer
 long CNoneApplication::OnClose(CContextItem* mContext, CListItem* &mBuffer, long size, long opSide)								//
 {																																	//
 #ifdef DEBUG_CLOSE
-	/*if (mContext->PProtocol->ProtocolNumber <10 ) */printf("\r\nIn close:Context:%8x,Buffer:%8x,size:%6d, Peer:%8x\r\n", mContext, mBuffer, size, mContext->PPeer);
+	/*if (umContext->PProtocol->ProtocolNumber <10 ) */printf("\r\nIn close:Context:%8x,Buffer:%8x,size:%6d, Peer:%8x\r\n", mContext, mBuffer, size, mContext->PPeer);
 #endif DEBUG_CLOSE
 
 	static volatile MYINT	InCloseProcess = MARK_NOT_IN_PROCESS;																	//
