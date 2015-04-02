@@ -119,7 +119,9 @@ long CSystemApplication::InitProcess(void)
 	ProcessWafaPage(&usedContext, fileBuffer, tpointer, referstart, referend+sizeof(WAFA_BODY_END), ProcessConfigVars);
 
 	ret_err = 0x80;
+// 	if (!SystemAddResource<CNormalBuffer>("BUFFER", configInfo->ContentMemoryBuffer, PAGE_SIZE, FALSE, TIMEOUT_TCP * 2)) break;
 	if (!SystemAddResource<CNormalBuffer>("BUFFER", configInfo->ContentMemoryBuffer, PAGE_SIZE, TRUE, 0)) break;
+	//	NOT change above, for setting of BUFFER2HEADINFO	// Nov 19 '14
 	if (!SystemAddResource<CHTTPContext>("HTTP", configInfo->ContentMemoryHttp, CACHE_SIZE, FALSE, TIMEOUT_TCP)) break;
 	if (!SystemAddResource<CFileContext>("FILE", configInfo->ContentMemoryFile, CACHE_SIZE, FALSE, TIMEOUT_FILE)) break;
 
@@ -132,6 +134,10 @@ long CSystemApplication::InitProcess(void)
 	pTCP = new CTCPProtocol();
 	pTCP->SetAction(Resoucce, "IOCP", "HTTP");
 	RegisterProtocol(pTCP, PROTOCOL_TCP, 0);
+
+	pTCPRead = new CTCPReadProtocol();
+	pTCPRead->SetAction(Resoucce, "IOCP", "HTTP");
+	RegisterProtocol(pTCPRead, PROTOCOL_TCPREAD, FLAG_NO_PROCESS_COMMAND);		//	Add Dec. 26 '14 for httpread not ProcessServerCommand
 
 	pFile = new CFileProtocol();
 	pFile->SetAction(Resoucce, "IOCP", "FILE");

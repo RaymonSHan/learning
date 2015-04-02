@@ -14,6 +14,7 @@ class CSystemApplication : public CTelnetApplication
 {
 public:
 	CTCPProtocol* pTCP;
+	CTCPReadProtocol* pTCPRead;
 // 	CTCPProtocol* pTCP2;
 	CSingleUDPProtocol* pUDPSingle;
 	CUDPProtocol* pUDP;

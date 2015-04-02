@@ -20,6 +20,8 @@
 #include	<process.h>																												//
 #include	<iphlpapi.h>
 
+#include	"afxole.h"
+
 
 // #include	<sqlext.h>																												//
 																																	//

@@ -127,7 +127,7 @@ int		OPNumber[] = {0,0,0,0,0,0,0};
 
 unsigned int CIOCP::WorkThread(void)																								//
 {																																	//
-	DWORD size;																														//
+	DWORD size, opcontrol = 0;																														//
 	CContextItem* mContext = 0;																										//
 	CListItem* mBuffer = 0;																											//
 	BOOL ret;																														//
@@ -138,7 +138,6 @@ unsigned int CIOCP::WorkThread(void)																								//
 	{																																//
 		ret = ::GetQueuedCompletionStatus(mIOCP, &size, (PULONG_PTR)&mContext, (LPOVERLAPPED*)&mBuffer, WSA_INFINITE);				//
 		if (size == -1) break;									//	exit the thread													//
-
 		nOper = mBuffer->NOperation;
 //  		if (nOper == OP_ACCEPT || nOper == OP_CONNECT || size==0)
 			printf ("OP:%s, PRO:%d, APP:%d, SIZE:%d, Context:%x, Peer:%x\r\n", \
@@ -146,7 +145,9 @@ unsigned int CIOCP::WorkThread(void)																								//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	The easy way to do the same thing is by switch/case which I do NOT like															//
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////		//
-		if (size) NoneAppFunc(CService::pNoneApplication, nOper-OP_BASE)(mContext, mBuffer, size, 0);				//
+//	Add opcontrol for WAIT	//	Add Dec. 25 '14
+		if (size || mContext->OpSideControl) NoneAppFunc(CService::pNoneApplication, nOper-OP_BASE)(mContext, mBuffer, size, mContext->OpSideControl);				//
+//		if (size) NoneAppFunc(CService::pNoneApplication, nOper-OP_BASE)(mContext, mBuffer, size, 0);				//
 		else 
 		{
 			lasterror = WSAGetLastError();
@@ -193,6 +194,12 @@ CListItem* ProcessClientCommand( CContextItem* mContext, CListItem* &mBuffer, lo
 {
 	CApplication* pApp = mContext->PApplication;
 
+	if (mContext->PProtocol->ProtocolFlag & FLAG_NO_PROCESS_COMMAND)		//	Add Dec. 26 '14 for httpread://, direct to client
+	{
+		mBuffer->NProcessSize = size;
+		return mBuffer;
+	}
+
 	if (mContext->ContentMode == CONTENT_MODE_HEAD)
 	{
 		mBuffer=ProcessCommand(mContext, mBuffer, size, pApp->CliCommandEnd, pApp->CliCommandEndSize);
@@ -227,6 +234,12 @@ extern unsigned char ASCII_HEX[];
 CListItem* ProcessServerCommand( CContextItem* mContext, CListItem* &mBuffer, long size )											//
 {																																	//
 	CApplication* pApp = mContext->PApplication;
+
+	if (mContext->PProtocol->ProtocolFlag & FLAG_NO_PROCESS_COMMAND)		//	Add Dec. 26 '14 for httpread://, direct to client
+	{
+		mBuffer->NProcessSize = size;
+		return mBuffer;
+	}
 
 	if (mContext->ContentMode == CONTENT_MODE_HEAD)
 	{
@@ -536,7 +549,6 @@ CContextItem* CProtocol::ClearProtocolContext(CContextItem* mContext, BOOL force
 		mBuffer->CliHandle = 0;
 		mBuffer->BufferType->FreeContext(mBuffer);																					//
 	}															//////////////////////////////////////////////////////////////////////
-
 	if (mContext->FirstContent)
 	{
 #ifdef	DEBUG_CONCURRENCY
@@ -549,6 +561,12 @@ CContextItem* CProtocol::ClearProtocolContext(CContextItem* mContext, BOOL force
 		mContext->FirstContent = 0;
 		mContext->PApplication->FreeApplicationBuffer(mBuffer);
 		// 			mBuffer->BufferType->FreeContext(mBuffer);
+	}
+	if (mContext->DyMemoryFile)									//	for WriteFile ContextFlag
+	{
+		mContext->DyMemoryFile->Close();
+		delete mContext->DyMemoryFile;
+		mContext->DyMemoryFile = 0;
 	}
 
 	if (mContext->PProtocol->CompareParaLength)					//	Clear Keyword in CONTEXT										//
@@ -665,7 +683,7 @@ long CIPProtocol::BindLocalSocket(CContextItem* mContext, CProtocol* pProtocol, 
 	{																																//
 		ret_err = 0x10;																												//
 		mContext->BHandle = 0;																										//
-		if (pProtocol->ProtocolNumber == PROTOCOL_TCP)
+		if ((pProtocol->ProtocolNumber == PROTOCOL_TCP) || (pProtocol->ProtocolNumber == PROTOCOL_TCPREAD))
 		{
 			ptype = SOCK_STREAM;														//
 			pNumber = PROTOCOL_TCP;
@@ -712,7 +730,7 @@ long CIPProtocol::BindLocalSocket(CContextItem* mContext, CProtocol* pProtocol, 
 	{																																//
 		ret_err = 0x10;																												//
 		mContext->BHandle = 0;																										//
-		if (pProtocol->ProtocolNumber == PROTOCOL_TCP)
+		if ((pProtocol->ProtocolNumber == PROTOCOL_TCP) || (pProtocol->ProtocolNumber == PROTOCOL_TCPREAD))
 		{
 			ptype = SOCK_STREAM;														//
 			pNumber = PROTOCOL_TCP;
@@ -872,12 +890,6 @@ extern sockaddr_in FiddlerAddr;	// value is argv[1]
 long CTCPProtocol::PostConnect(CContextItem* mContext, CListItem* &mBuffer, long size, long op)									//
 {
 #ifdef FIDDLER_ADDR																																	//
-//	Remote this for Sangfor SSL VPN test, send to proxy
-//	sockaddr_in sangfor;
-//	sangfor.sin_family = AF_INET;    
-//	sangfor.sin_port = htons(8888);    
-//	sangfor.sin_addr.S_un.S_addr = inet_addr("10.32.209.107");		// at office
-	//sangfor.sin_addr.S_un.S_addr = inet_addr("192.168.1.106");	// at home
 	sockaddr_in *addr = &FiddlerAddr;
 #else FIDDLER_ADDR
 	sockaddr_in* addr = (sockaddr_in*)&(((CTCPContext*)mContext)->addrServer);														//
@@ -1365,6 +1377,19 @@ __int64 GetFileContextLength(CContextItem* mContext)
 	return fileContext->fileLength;
 }
 
+long TranslateFileName(CContextItem *mContext, CListItem *mBuffer)
+{
+	CFileContext* fileContext = (CFileContext*)mContext;
+	char* pointer = (char*)(mBuffer+1);
+	while (*pointer)
+	{
+		if (*pointer == '/') *pointer = '\\'; 
+		pointer++; 
+	};
+	strcat_s(fileContext->fileName, MAX_PATH, (char*)(mBuffer+1));
+	return 0;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	For File, CreateNew is Open file for open																						//
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////		//
@@ -1439,6 +1464,8 @@ long CFileProtocol::PostConnect(CContextItem* mContext, CListItem* &mBuffer, lon
 	while (TRUE)																													//
 	{																																//
 		ret_err = 0x10;																												//
+		TranslateFileName(mContext, mBuffer);				//	Add Dec. 22 '14 for WriteCache
+
 		mContext->BHandle = CreateFile(fileContext->fileName, GENERIC_WRITE, FILE_SHARE_READ,										//
 			NULL, CREATE_ALWAYS, FILE_FLAG_OVERLAPPED, NULL);																		//
 		if (mContext->BHandle == INVALID_HANDLE_VALUE)																				//
@@ -1450,8 +1477,8 @@ long CFileProtocol::PostConnect(CContextItem* mContext, CListItem* &mBuffer, lon
 																																	//
 		ret_err = 0x30;																												//
 //		NoneProFunc(mContext->PProtocol, fPostSend)(mContext, mBuffer, size,  OP_SERVER_WRITE, 0);									//
-		NoneProFunc(mContext->PProtocol, fPostSend)(mContext, mBuffer, size,  op, 0);	//	for Directory Connect					//
-																																	//
+// 		NoneProFunc(mContext->PProtocol, fPostSend)(mContext, mBuffer, size,  op, 0);	//	for Directory Connect					//
+//		Remove it in Dec. 22 '14 for WriteCache																																	//
 		ret_err = 0;																												//
 		break;																														//
 	}																																//
@@ -1555,13 +1582,8 @@ long CFileReadProtocol::CreateRemote(CContextItem* mContext, void* para, long si
 long CFileReadProtocol::PostConnect(CContextItem* mContext, CListItem* &mBuffer, long size, long op)								//
 {																																	//
 	CFileContext* fileContext = (CFileContext*)mContext;
-	char* pointer = (char*)(mBuffer+1);
-	while (*pointer)
-	{
-		if (*pointer == '/') *pointer = '\\'; 
-		pointer++; 
-	};
-	strcat_s(fileContext->fileName, MAX_PATH, (char*)(mBuffer+1));
+
+	TranslateFileName(mContext, mBuffer);
 	// should add path (from fileContext->filename) and filename (from mBuffer+1)
 	return (mContext->PProtocol->* (&CIOCP::fProtocolFunction[PROTOCOL_FILE])->fCreateNew)	
 		(fileContext, fileContext->fileName, strlen(fileContext->fileName));

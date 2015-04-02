@@ -4,7 +4,7 @@
 #define WAFA
 // #define REDANT
 
-#define FIDDLER_ADDR					// for sangfor vpn use, must set fiddler proxy address
+// #define FIDDLER_ADDR					// for sangfor vpn use, must set fiddler proxy address
 
 // #define USE_ARGC
 // #define USE_PATH
@@ -34,7 +34,7 @@
 // #define	DEBUG_POST
 // #define	DEBUG_CLOSE
 // #define	DEBUG_TCP
-#define	DEBUG_WAFA
+// #define	DEBUG_WAFA
 // #define	DEBUG_CONCURRENCY
 // #define	DEBUG_PEER
 // #define  DEBUG_NTLM
@@ -110,10 +110,10 @@
 //	For Non-Directly Free MEMORYLIST, the timeout value																				//
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////		//
 #define TIMEOUT_INFINITE			(1<<30)																							//
-#define TIMEOUT_TCP					60							//	change for Catch, and now ContentPad only active one connect, it is enough	//	Apr. 28 '14
+#define TIMEOUT_TCP					30							//	change for Catch, and now ContentPad only active one connect, it is enough	//	Apr. 28 '14
 #define	TIMEOUT_TCPCONNECT			5							//	after connect, no respond from server will close soon			//
 #define TIMEOUT_UDP					10																								//
-#define TIMEOUT_FILE				4																								//
+#define TIMEOUT_FILE				3																								//
 																																	//
 #define	TIMEOUT_ACCEPT				8							//	Timeout for NO DATA after ACCEPT for TCP NON-directly free		//
 																//////////////////////////////////////////////////////////////////////
@@ -135,6 +135,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////		//
 #define PROTOCOL_NONE				0																								//
 #define PROTOCOL_TCP				6																								//
+#define PROTOCOL_TCPREAD			60
 #define PROTOCOL_TCP_POOL			7
 #define PROTOCOL_UDP				17																								//
 #define PROTOCOL_SINGLEUDP			18
@@ -237,6 +238,7 @@
 #define	FLAG_PASSBY					0x1000
 #define	FLAG_REMOVE_HTTPHEAD		0x2000
 #define FLAG_SINGLE					0x4000
+#define FLAG_NO_PROCESS_COMMAND		0x8000					//	only for HTTPREAD only now, for not do ProcessServerCommand
 																																	//
 #define	FLAG_IS_CONTEXT				0x10000000																						//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -266,14 +268,15 @@
 #define	OP_SERVER_WRITE				(OP_BASE+fOnServerWrite)																		//
 #define	OP_CLOSE					(OP_BASE+fOnClose)																				//
 #define	OP_PASSBY					(OP_BASE+fOnPassby)
-
 #define OP_PROCESS_ACCEPT			(OP_BASE+100)
 
-#define OPSIDE_CLIENT				(OP_BASE+OP_SERVER_WRITE)	//	0x205
 #define OPSIDE_SERVER				(OP_BASE+OP_CLIENT_WRITE)	//	0x203
+#define OPSIDE_CLIENT				(OP_BASE+OP_SERVER_WRITE)	//	0x205
 #define OPSIDE_PEER					(OPSIDE_CLIENT+1)			//	0x206
 #define OPSIDE_PEER_CLIENT			(OPSIDE_CLIENT+2)			//	0x207
 #define OPSIDE_PEER_SERVER			(OPSIDE_CLIENT+3)			//	0x028
+
+#define OP_CONTROL					(OP_BASE+0x1000)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	Other Operation NOT define in function																							//
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////		//
@@ -418,6 +421,7 @@ long Myitoa(__int64 ivalue, char* buffer, long length);
 long MyString(char* source, int len, char* &buffer);
 
 long Myitoh(unsigned char ivalue, char* &buffer);
+long Myitoh(WORD ivalue, char* &buffer);
 long Myitoh(unsigned long ivalue, char* &buffer);
 long Myitoh(unsigned __int64 ivalue, char* &buffer);
 
@@ -432,6 +436,9 @@ long MyGetInfoAddr(char* ipstring, long strsize, addrinfo* &ipaddr);
 // inline long SameContextAddress(CTCPContext* one, CTCPContext* two) {return SameAddress(one->addrServer, two->addrServer);};
 inline long SameAddress(sockaddr_in* one, sockaddr_in* two) {return memcmp(one, two, sizeof(sockaddr_in));};
 #define SameContextAddress(one, two)	SameAddress(&(((CTCPContext*)one)->addrServer), &(((CTCPContext*)two)->addrServer))
+
+void ClearCache(char* pathname, long timebefore);		// for FILETIME, hi-DWORD 200 about 1 day 
+int ChangeImg(CContextItem* mContext, CListItem* serBuffer, int width);  // Mar. 10 '15
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	For given 'filename', whether it with extend name in the list followed															//
@@ -504,6 +511,8 @@ long GetInt(char* inBuffer, long inLength);
 unsigned __int64 GetHex(char* &buffer);
 unsigned __int64 GetHex(char* buffer, long len);
 
+PUCHAR Bmemchr(PUCHAR charend, UCHAR search, PUCHAR charstart);
+
 
 inline char* AddString(char* inBuffer, char* str, long length)
 {
@@ -530,8 +539,19 @@ long ReplaceHttpRequest(CListItem* mBuffer, char* key, char* replace, long repsi
 
 unsigned char* UTF8toGB2312(unsigned char* utf8, long usize, unsigned char* gb2312, long &gsize);
 unsigned char* GB2312toUTF8(unsigned char* gb2312, long gsize, unsigned char* utf8, long &usize);
+
+unsigned char* Base64Decode(unsigned char* base64str, long bsize, unsigned char* normalstr, long &nsize);
+unsigned char* Base64Encode(unsigned char* normalstr, long nsize, unsigned char* base64str, long &bsize);
+unsigned char* MD5Encode(unsigned char* normalstr, long nsize, unsigned char* md5str, long &msize);
 unsigned char* QRCodeTranslate(unsigned char* pic, long gsize, unsigned char* mStart, long &usize);
 
+unsigned char* TranEscape(unsigned char* gb2312, long gsize, unsigned char* unicode, long &usize, long stupid = 0);
+PUCHAR GetFilePath(PUCHAR fileStart, long fileLen, PUCHAR mStart, long &nsize);
+PUCHAR TranslatePath(PUCHAR pathStart, long pathLen, char* fileStart, char* fileEnd, PUCHAR mStart, long &nsize);
+
+PUCHAR FormatFormCITIC(PUCHAR formStart, long formLen, char* valStart, char* valEnd, PUCHAR mStart, long &nsize, CListItem *tempbuffer, long innest = 0);
+
+PUCHAR FormatInputCITIC(PUCHAR inputStart, PUCHAR end, PUCHAR &resultStart, long &shouldadd);	//	return end of input place of '>'
 
 #define	__TRY \
 	ret_err = 0x01;\
@@ -642,6 +662,9 @@ struct CTunnelHead;
 
 #define		WAFA_BODY_START		"<!--wafastart-->"
 #define		WAFA_BODY_END		"<!--wafaend-->"
+
+#define		WAFA_HTML_START		"<!--wafahtmlstart-->"			//	Add for simple script	// Nov 21 '14
+#define		WAFA_HTML_END		"<!--wafahtmlend-->"
 
 #define		WAFA_CREATE_START	"<!--wafacreate>"
 #define		WAFA_CREATE_END		"</wafacreate-->"

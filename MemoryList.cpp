@@ -130,6 +130,7 @@ CListItem* CMemoryList::GetOnlyOneList()																							//
 void CMemoryList::TimeoutContext(void)																								//
 {																																	//
 	CListItem **ppContext = 0, *doContext = 0;																						//
+// 	CContextItem *pContextItem = 0;
 	static volatile MYINT inTimeout = 0;																							//
 	int nSeconds, nLen;																												//
 volatile MYINT*   listProcess;
@@ -145,40 +146,53 @@ CListItem **ppBuffer, *doBuffer;
 // DisplayContext();
 //DEBUG_MESSAGE(MODULE_MEMORY, MESSAGE_STATUS, "(%x)", UsedItem);
 		ppContext = &((CListItem*)UsedItem);						//	Traversal the list												//
+// 		pContextItem = (CContextItem *)(*ppContext);
 		while (*ppContext)																												//
 		{																																//
-			if ( ((*ppContext)->ListFlag & FLAG_IS_CONTEXT) && ((*ppContext)->countDown==TIMEOUT_INFINITE) &&
-				((*ppContext)->PProtocol->ProtocolNumber==PROTOCOL_TCP) && (*ppContext)->CliBuffer/*tcp is server side*/)		//
-			{																															//
-				nLen = sizeof(nSeconds);																								//
-
-				ppBuffer = &((*ppContext)->CliBuffer->CliListNext);
-				listProcess = &((CTCPProtocol*)((*ppContext)->PProtocol))->CliListInProcess;
-
-				while (*ppBuffer != MARK_CLIBUFFER_END)
-				{
-					doBuffer = (*ppBuffer);
-					if (doBuffer->CliWaitData == MARK_IN_PROCESS)
-					{
-						::getsockopt( (SOCKET)(doBuffer->CliHandle), SOL_SOCKET, SO_CONNECT_TIME, (char *)&nSeconds, &nLen);	//
-						if ( nSeconds > TIMEOUT_ACCEPT && nSeconds != -1 )
-						{
-							doBuffer->CliWaitData = 0;
-							::closesocket((SOCKET)(doBuffer->CliHandle));		//
-// DEBUG_MESSAGE_CON(MODULE_MEMORY, MESSAGE_STATUS, "(c)");
-						}
-					}
-					if (doBuffer->CliWaitData == 0)
-					{
-// DEBUG_MESSAGE_CON(MODULE_MEMORY, MESSAGE_STATUS, "(t)");
-						while ( InterCmpExg(listProcess, MARK_IN_PROCESS, MARK_NOT_IN_PROCESS) == MARK_IN_PROCESS );							//
-						*ppBuffer = doBuffer->CliListNext;
-						doBuffer->CliListNext = 0;
-						*listProcess = MARK_NOT_IN_PROCESS;
-					}
-					if (*ppBuffer != MARK_CLIBUFFER_END) ppBuffer = &((*ppBuffer)->CliListNext);
-				}
-			}																															//
+// CLOSE CLIENT accept timeout for lazy check, Mar. 26 '15
+// SO lazy for me
+// 			if ( ((*ppContext)->ListFlag & FLAG_IS_CONTEXT) && ((*ppContext)->countDown==TIMEOUT_INFINITE) &&
+// 				((*ppContext)->PProtocol->ProtocolNumber==PROTOCOL_TCP) && (*ppContext)->CliBuffer/*tcp is server side*/)		//
+// 			{																															//
+// 				// this segment for zero Accept
+// 				nLen = sizeof(nSeconds);																								//
+// 
+// 				ppBuffer = &((*ppContext)->CliBuffer->CliListNext);
+// 				listProcess = &((CTCPProtocol*)((*ppContext)->PProtocol))->CliListInProcess;
+// 
+// 				while (*ppBuffer != MARK_CLIBUFFER_END)
+// 				{
+// 					doBuffer = (*ppBuffer);
+// 					if (doBuffer->CliWaitData == MARK_IN_PROCESS)
+// 					{
+// 						::getsockopt( (SOCKET)(doBuffer->CliHandle), SOL_SOCKET, SO_CONNECT_TIME, (char *)&nSeconds, &nLen);	//
+// 						if ( nSeconds > TIMEOUT_ACCEPT && nSeconds != -1 )
+// 						{
+// 							doBuffer->CliWaitData = 0;
+// 							::closesocket((SOCKET)(doBuffer->CliHandle));		//
+// // DEBUG_MESSAGE_CON(MODULE_MEMORY, MESSAGE_STATUS, "(c)");
+// 						}
+// 					}
+// 					if (doBuffer->CliWaitData == 0)
+// 					{
+// // DEBUG_MESSAGE_CON(MODULE_MEMORY, MESSAGE_STATUS, "(t)");
+// 						while ( InterCmpExg(listProcess, MARK_IN_PROCESS, MARK_NOT_IN_PROCESS) == MARK_IN_PROCESS );							//
+// 						*ppBuffer = doBuffer->CliListNext;
+// 						doBuffer->CliListNext = 0;
+// 						*listProcess = MARK_NOT_IN_PROCESS;
+// 					}
+// 					if (*ppBuffer != MARK_CLIBUFFER_END) ppBuffer = &((*ppBuffer)->CliListNext);
+// 				}
+// 			}																															//
+			if (((*ppContext)->countDown <= TIMEOUT_QUIT) && (*ppContext)->OpSideControl)	// for WAIT
+			{
+				// this segment for WAIT now	//	Dec. 25 '14
+				(*ppContext)->countDown ++;		// to large than TIMEOUT_QUIT
+				ReflushTimeout((CContextItem*)*ppContext);
+				CListItem *opBuffer = (*ppContext)->PApplication->GetApplicationBuffer();
+				opBuffer->NOperation = (*ppContext)->OpSideControl - OP_CONTROL;
+				::PostQueuedCompletionStatus((*ppContext)->PProtocol->ProtocolIOCP->mIOCP, 0, (ULONG_PTR)(*ppContext), 	(LPOVERLAPPED)opBuffer);	
+			}
 			if ( ((*ppContext)->countDown < TIMEOUT_INFINITE) && ( !((*ppContext)->countDown--) ) )									//
 			{																															//
 				while ( InterCmpExg(&InUsedListProcess, MARK_IN_PROCESS, MARK_NOT_IN_PROCESS) == MARK_IN_PROCESS );					//
@@ -197,7 +211,9 @@ CListItem **ppBuffer, *doBuffer;
 				doContext->usedList = 0;																								//
 				FreeOneList(doContext);																									//
 			}																															//
-			if (*ppContext) ppContext = (CListItem**)(&((*ppContext)->usedList));																		//
+// 			if (*ppContext) ppContext = (CListItem**)(&((*ppContext)->usedList));																		//
+			if (*ppContext > (CListItem*)0x1000) ppContext = (CListItem**)(&((*ppContext)->usedList));			// crash in Mar. 26 '15 so add.															//
+
 		}																																//
 	}
 	inTimeout = 0;																													//
@@ -236,13 +252,22 @@ printf("in comp:%x:%x\r\n", sour->sin_port, sour->sin_addr);
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////		//
 void CMemoryList::DisplayContext()																									//
 {																																	//
-	CListItem* mList = UsedItem;																									//
+// 	CListItem* mList = UsedItem;																									//
+// 	while (mList)																													//
+// 	{																																//
+// 		printf("0x%x:%d->", mList, mList->countDown);																				//
+// 		mList = (CListItem*)mList->usedList;																						//
+// 	}																																//
+// 	if (UsedItem) printf("\r\n");																									//
+	CContextItem* mList = (CContextItem *)UsedItem;																									//
 	while (mList)																													//
 	{																																//
-		printf("0x%x:%d->", mList, mList->countDown);																				//
-		mList = (CListItem*)mList->usedList;																						//
+		printf("0x%x:%d->", mList, mList->countDown);																	
+//		printf("0x%x:%d,%d->", mList, mList->countDown, mList->OpSideControl);														//
+		mList = (CContextItem*)mList->usedList;																						//
 	}																																//
 	if (UsedItem) printf("\r\n");																									//
+
 }																																	//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -553,11 +578,35 @@ BOOL CResources::InitProcess( void )																								//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	implement of CResources																											//
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////		//
+
+extern CService theService;
+#define	SYSTEM_CACHE_NAME			"ReadCache"
+//#define SYSTEM_CACHE_AGE			1000			//	about 5 day
+#define SYSTEM_CACHE_AGE			5000			//	about 25 day
+
+char* GetCachePath()
+{
+	CContentPadServer* pContentPad = theService.pStartApplication->pContentPad;
+	CFileContext* filecontext = (CFileContext*)pContentPad->PreparePeer(NULL, SYSTEM_CACHE_NAME);
+	if (filecontext) return (filecontext->fileName);
+	else return 0;
+}
+
 BOOL CResources::MainProcess( void )																								//
 {																																	//
+	static long shouldClearCache = 1;
+	static char* cachePath = 0;
+
 	int i;																															//
 	for (i=0; i<ResourceNumber; i++) ResourceArray[i].TimeoutContext();																//
-																																	//
+	if (!(--shouldClearCache))						//	add cache manager	Dec. 30 '14
+	{
+		cachePath = GetCachePath();
+		shouldClearCache = 3600*23;			// about 1 day
+		ClearCache(cachePath, SYSTEM_CACHE_AGE);
+	}
+		
+		//
 // #ifdef _DEBUG
 #define RESOURCE_LOOP 5
 	static int loop = 1;

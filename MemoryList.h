@@ -115,6 +115,10 @@ struct ContextStruct																												//
 	char				serverName[SMALL_CHAR];					//	lazy way for save server side pad name,		// Apr. 26 '14
 	ProtocolId*			peerProtocol;
 	CContextItem*		oldPeer;								//	for keep-alive
+	long				opSideControl;							//	now, for WAIT only
+
+	long				dyControl;								//	for SETCONTEXT command
+	COleStreamFile*		dyMemoryFile;
 
 };																//																	//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -209,6 +213,7 @@ typedef struct ContentPad
 	char		serverError[SMALL_CHAR];						//	for define & refer
 	char		serverDefault[MAX_URL];							//	for refer, now only used in Scanf for one key, when not found.
 	char		serverIf[MAX_URL];								//	for refer, now only used in Scanf for whether add or not
+	char*		serverNowStart;									//	for replace use only now.
 	char*		serverNowEnd;									//	for Loop use in Scanf, this means the end of this Scanf, next Scanf begin start with here, LoopEnd clear it.
 
 //	The following is for concurrency use /////////////////////////	for FILEpad, normal is 0, after send all concurrency request is 1, when all concurrency finish and begin next define is 0
@@ -234,7 +239,7 @@ typedef struct VarPad											//	For startup para get, the following is the on
 	long		getLength[MAX_CONTENT_KEY+SYSTEM_CONTENT_KEY];
 }VarPad;
 
-#define HEADINFO_BOUNDARY			MAX_CONTENT_KEY+1			//	is 97
+#define HEADINFO_BOUNDARY			MAX_CONTENT_KEY + 1			//	is 97
 // #define WAFA_ONLY_USE					MAX_CONTENT_KEY+2			//	is 98
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	The following is for save code only																								//
@@ -267,6 +272,10 @@ typedef struct VarPad											//	For startup para get, the following is the on
 #define ServerName					GU.CS.serverName
 #define PeerProtocol				GU.CS.peerProtocol
 #define OldPeer						GU.CS.oldPeer
+#define OpSideControl				GU.CS.opSideControl
+
+#define DyControl					GU.CS.dyControl
+#define DyMemoryFile				GU.CS.dyMemoryFile
 
 																																	//
 #define	OLapped						GU.BS.oLapped																					//
@@ -283,6 +292,11 @@ typedef struct VarPad											//	For startup para get, the following is the on
 #define CliWaitData					GU.BS.DU.BL.cliWaitData
 																																	//
 #define ListFlag					listFlag																						//
+
+#define	CONTEXT_MEMORY_FILE			"MemoryFile"
+
+#define	FLAG_MEMORY_FILE			0x1
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct URLInfo
 {
@@ -453,6 +467,7 @@ public:																																//
 // #ifdef CONTENTPAD_APPLICATION
 			if (sizeof(ContentPad) > 4*PAGE_SIZE) break;
 			if (BufferSize > 10*PAGE_SIZE) BufferSize-=(5*PAGE_SIZE);	//	for FILE_SEGMENT_ELEMEN use one page more				//
+			//	NOT change above, for setting of BUFFER2HEADINFO	// Nov 19 '14
 // #else CONTENTPAD_APPLICATION
 // 			if (BufferSize > 10*PAGE_SIZE) BufferSize-=(2*PAGE_SIZE);	//	for FILE_SEGMENT_ELEMEN use one page more					//
 // #endif CONTENTPAD_APPLICATION

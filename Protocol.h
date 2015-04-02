@@ -114,16 +114,27 @@ public:																																//
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////		//
 void inline ReflushTimeout(CContextItem* mContext, long timeout = 0)																//
 {																																	//
-	if (!timeout)
-	{
-		timeout = mContext->ContextType->TimeoutInit;																				//
+//	Change to this for WAIT, Dec. 25 '14																							//
+	if (!timeout) timeout = mContext->ContextType->TimeoutInit;																		//
+	else timeout += TIMEOUT_QUIT;																									//
 																																	//
-		if ( (mContext->countDown < timeout) && (mContext->countDown > TIMEOUT_QUIT) )												//
-			mContext->countDown = timeout;																							//
-	}
-//	Now add this line for TIMEOUT_TCPCONNECT. it should set to a small value, and set back to TimeoutInit after received	//	Apr. 28 '14
+	if (mContext->countDown > TIMEOUT_QUIT)	mContext->countDown = timeout;															//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	//	Now add this line for TIMEOUT_TCPCONNECT. it should set to a small value, and set back to TimeoutInit after received	//	Apr. 28 '14
 	else mContext->countDown = timeout;																								//
 	return;																															//
+//
+// 	if (!timeout)
+// 	{
+// 		timeout = mContext->ContextType->TimeoutInit;																				//
+// 																																	//
+// 		if ( (mContext->countDown < timeout) && (mContext->countDown > TIMEOUT_QUIT) )												//
+// 			mContext->countDown = timeout;																							//
+// 	}
+// //	Now add this line for TIMEOUT_TCPCONNECT. it should set to a small value, and set back to TimeoutInit after received	//	Apr. 28 '14
+// 	else mContext->countDown = timeout;																								//
+// 	return;																															//
 }																																	//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -187,6 +198,9 @@ public:																																//
 		mContext->ServerName[0] = 0;
 		mContext->PeerProtocol = NULL;
 		mContext->OldPeer = NULL;
+		mContext->OpSideControl = 0;
+		mContext->DyControl = 0;
+		mContext->DyMemoryFile = 0;
 
 		memset(mContext+1, 0, mContext->ContextType->BufferSize);	//	should do ?
 	}
@@ -299,6 +313,10 @@ public:																																//
 	long	PostSend(CContextItem* mContext, CListItem* &mBuffer, long size, long op, long opSide);								//
 	long	PostReceive(CContextItem* mContext, CListItem* &mBuffer, long size, long op, long opSide);								//
 };																																	//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class CTCPReadProtocol : public CTCPProtocol																								//
+{																																	//
+};																																	//
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CUDPProtocol : public CIPProtocol																								//
@@ -386,6 +404,7 @@ public:																																//
 
 
 __int64 GetFileContextLength(CContextItem* mContext);
+long TranslateFileName(CContextItem *mContext, CListItem *mBuffer);
 
 class CFileProtocol : public CProtocol																								//
 {																																	//

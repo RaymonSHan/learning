@@ -711,7 +711,6 @@ char tarbuffer[BUFFERSIZE];
 // 	fwrite(tarbuffer, 1, numtran, filew);
 // 	fclose(filew);
 // 
-// 	int aaa = 1;
 // 	return 0;
 // 
 // }

@@ -475,7 +475,7 @@ long CProxyApplication::OnClientRead(CContextItem* mContext, CListItem* &mBuffer
 			return NoneProFunc(peerContext->PProtocol, fPostSend)(peerContext, mBuffer, mBuffer->NProcessSize, OP_SERVER_WRITE, opSide);
 		else break;
 	}
-	MyGetInfoAddr(urlinfo->getURL+7, max(urlinfo->getLength[0], urlinfo->getLength[1])-7, aiList);
+	if (MyGetInfoAddr(urlinfo->getURL+7, max(urlinfo->getLength[0], urlinfo->getLength[1])-7, aiList)) break;
 
 // 	ret_err = 0x20;
 // 	if (peerContext->PPeer && memcmp(&tcpContext->addrServer, aiList->ai_addr, sizeof(sockaddr)))

@@ -22,13 +22,21 @@ WafaProcessFunction GetWafaFunction (char* functionName);
 CListItem* GetReferStruct(CContextItem* mContext);
 char* AddReferPlace(CContextItem* mContext, ContentPad* pad, char* str, long &len);
 
-long Wafa_NULL(CContextItem* mBuffer, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
+long ParserCITIC(unsigned char* condition, int conditionLen, char* valStart, char* valEnd);
+long ParserCITICNoBracket(unsigned char* condition, int conditionLen, char* valStart, char* valEnd);
+long GetCITICValue(unsigned char *keystart, unsigned char* keyend, char *valStart, char *valEnd, char *&resultstart, long &resultlen);
+long GetCITICGroup(unsigned char *keystart, unsigned char* keyend, char *valStart, char *valEnd, char *&nowstart, char *&nowend, char* &groupend);
 
+long StringIntCmp(unsigned char *onestart, unsigned char *oneend, unsigned char *twostart, unsigned char *twoend, long op);
+long StringFormatInt(unsigned char *tar, unsigned char *sourstart, unsigned char *sourend);
+
+long Wafa_NULL(CContextItem* mBuffer, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
 long Wafa_Add(CContextItem* mContext, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
 long Wafa_Exist(CContextItem* mContext, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
 long Wafa_NotExist(CContextItem* mContext, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
 long Wafa_IfScanf (CContextItem* mContext, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
 long Wafa_Scanf(CContextItem* mContext, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
+long Wafa_MultiScanf(CContextItem* mContext, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
 long Wafa_Var(CContextItem* mContext, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
 long Wafa_Count(CContextItem* mContext, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
 long Wafa_Value(CContextItem* mContext, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
@@ -36,7 +44,10 @@ long Wafa_Compare (CContextItem* mContext, CListItem* &referContent, char* start
 long Wafa_Assign (CContextItem* mContext, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
 long Wafa_Match (CContextItem* mContext, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
 long Wafa_Copy (CContextItem* mContext, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
-long Wafa_LoopPrint (CContextItem*, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
+long Wafa_LoopPrint (CContextItem* mContext, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
+long Wafa_LoopAssign (CContextItem* mContext, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
+long Wafa_Replace (CContextItem* mContext, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
+
 #ifdef	NTLM_FUNCTION
 long Wafa_NTLM (CContextItem*, CListItem* &referContent, char* start, char* end, char* key, long keyLen, long keyFrom, ContentPad* infoPad);
 #endif	NTLM_FUNCTION
@@ -165,7 +176,8 @@ long GetSelect(CListItem* mBuffer);
 #define		PARA_DEF_COOKIE					6
 #define		PARA_DEF_REFERNAME				7
 
-#define		SMALL_CONTENT_LENGTH_SIZE		5
+// #define		SMALL_CONTENT_LENGTH_SIZE		5
+#define		SMALL_CONTENT_LENGTH_SIZE		7
 
 #define		PARA_REF_METHOD			0
 #define		PARA_REF_KEY			1

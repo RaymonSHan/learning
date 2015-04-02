@@ -142,6 +142,28 @@ unsigned char TRAN_POST[ASCII_NUMBER] = {
 	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,
 };
 
+unsigned char TRAN_POST_NEW[ASCII_NUMBER] = {
+	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,
+	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,
+	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x00,	0x00,	0x11,	0x00,	0x00,	0x00,
+	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,
+	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,
+	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x11,	0x11,	0x11,	0x11,	0x00,
+	0x11,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,
+	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x00,	0x11,	0x11,	0x11,	0x11,	0x11,
+	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,
+	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,
+	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,
+	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,
+	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,
+	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,
+	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,
+	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,	0x11,
+};
+//    0      1      2      3      4      5      6      7      8      9      a      b      c      d      e      f
+
+
+
 //	Attention last byte in inBuffer, will be changed to 0 !!!
 long CommandLineParaTran (char* inBuffer, long length, char* seprChar, char* preChar, 
 						  KeyParaTran* keyFormat, ValParaTran* valFormat, unsigned char* charMap)
@@ -352,6 +374,8 @@ char* memstr(char* sourstr, long size, char* substr, long subsize)														
 	char *nowstart, *endplace;																										//
 	long first, mask;
 	
+//	if (!size) return 0;										//	add Nov. 26 '14
+	if (!size || !sourstr || !substr || !subsize) return 0;	//	change to this Dec. 11 '14
 	endplace = sourstr + size - subsize;																							//
 	first = *((long*)substr);																										//
 	if (subsize <= 0) return NULL;
@@ -512,6 +536,15 @@ long Myitoh(unsigned char ivalue, char* &buffer)
 	return 0;
 }
 
+long Myitoh(WORD ivalue, char* &buffer)
+{
+	*buffer++ = ToHex[ivalue >> 12];
+	*buffer++ = ToHex[(ivalue >> 8) & 0xf];
+	*buffer++ = ToHex[(ivalue >> 4) & 0xf];
+	*buffer++ = ToHex[ivalue & 0xf];
+	return 0;
+}
+
 long Myitoh(unsigned long ivalue, char* &buffer)
 {
 	char temp[SMALL_CHAR];
@@ -637,15 +670,15 @@ char* FindString(char* inBuffer, long inLength, char* keyHead, long keyLength, c
 
 char* FindInt(char* inBuffer, long inLength, char* keyHead, long keyLength, long& lvalue)
 {
-	char* inStart;
-	char* inEnd = (char*)-1;
+	unsigned char* inStart;
+	unsigned char* inEnd = (unsigned char*)-1;
 	char svalue;
 	lvalue = 0;
 
-	if (inLength) inEnd = inBuffer + inLength;
+	if (inLength) inEnd = (	unsigned char*)inBuffer + inLength;
 
-	inStart = memstr(inBuffer, inLength, keyHead, keyLength );
-	if (!inStart) return (char*)VALUE_NOT_FOUND;;
+	inStart = (unsigned char*)memstr(inBuffer, inLength, keyHead, keyLength );
+	if (!inStart) return (char*)VALUE_NOT_FOUND;
 
 	inStart += keyLength;
 	svalue = ASCII_DEC[*inStart++];
@@ -654,20 +687,23 @@ char* FindInt(char* inBuffer, long inLength, char* keyHead, long keyLength, long
 		lvalue = lvalue*10+svalue;
 		svalue = ASCII_DEC[*inStart++];
 	}
-	return inStart;
+	return (char*)inStart;
 }
 
 long GetInt(char* inBuffer, long inLength)
 {
+	unsigned char* inStart =(unsigned char*)inBuffer;
 	long lvalue = 0;
 	char svalue = 0;
-	char* inEnd = inBuffer + inLength;
+	unsigned char* inEnd = inStart + inLength;
 
-	svalue = ASCII_DEC[*inBuffer++];
-	while (inBuffer<=inEnd && svalue!=-1)
+	svalue = ASCII_DEC[*inStart++];
+	if (svalue==-1) return VALUE_NOT_FOUND;			//	add Dec. 19 '14
+
+	while (inStart<=inEnd && svalue!=-1)
 	{
 		lvalue = lvalue*10+svalue;
-		svalue = ASCII_DEC[*inBuffer++];
+		svalue = ASCII_DEC[*inStart++];
 	}
 	return lvalue;
 }
@@ -746,8 +782,11 @@ long ReplaceHttpRequest(CListItem* mBuffer, char* key, char* replace, long repsi
 }
 
 
-extern WORD Unicode_GB[];
-extern WORD GB_Unicode[];
+// extern WORD Unicode_GB[];
+// extern WORD GB_Unicode[];
+
+extern WORD Unicode_GBK[];
+extern WORD GBK_Unicode[];
 
 unsigned char* UTF8toGB2312(unsigned char* utf8, long usize, unsigned char* gb2312, long &gsize)
 {
@@ -755,6 +794,8 @@ unsigned char* UTF8toGB2312(unsigned char* utf8, long usize, unsigned char* gb23
 	unsigned char *gstart, *gend;
 	unsigned char uchar;
 	WORD	 oneword;
+
+	if (!utf8 || !usize || !gb2312) return 0;
 
 	ustart = utf8;
 	gstart = gb2312;
@@ -769,14 +810,14 @@ unsigned char* UTF8toGB2312(unsigned char* utf8, long usize, unsigned char* gb23
 		if ( (uchar & 0xE0) == 0xE0 )
 		{
 			oneword = (((WORD)(uchar&0xf))<<12) + (((WORD)(*(ustart+1))&0x3f)<<6) + (((WORD)*(ustart+2))&0x3f);
-			(*(WORD*)gstart) = Unicode_GB[oneword];
+			(*(WORD*)gstart) = Unicode_GBK[oneword];
 			ustart += 3;
 			gstart += 2;
 		}
 		else if ( (uchar & 0xC0) == 0xC0 )
 		{
 			oneword = (((WORD)(uchar&0x1f))<<6) + (((WORD)*(ustart+1))&0x3f);
-			(*(WORD*)gstart) = Unicode_GB[oneword];
+			(*(WORD*)gstart) = Unicode_GBK[oneword];
 			ustart += 2;
 			gstart += 2;
 		}
@@ -801,6 +842,8 @@ unsigned char* GB2312toUTF8(unsigned char* gb2312, long gsize, unsigned char* ut
 	unsigned char gchar;
 	WORD	oneword;
 
+	if (!gb2312 || !gsize || !utf8) return 0;
+
 	ustart = utf8;
 	gstart = gb2312;
 	uend = gend = (unsigned char*)-1;
@@ -814,7 +857,7 @@ unsigned char* GB2312toUTF8(unsigned char* gb2312, long gsize, unsigned char* ut
 		if ( gchar > 0x80 )
 		{
 			oneword = *((WORD*)gstart);
-			oneword = GB_Unicode[oneword];
+			oneword = GBK_Unicode[oneword];
 			if (oneword != 0x2020)
 			{
 				*ustart++ = 0xE0 | ((char)(oneword >> 12));
@@ -844,6 +887,425 @@ unsigned char* GB2312toUTF8(unsigned char* gb2312, long gsize, unsigned char* ut
 	usize = ustart-utf8;
 	gsize = gstart-gb2312;
 	return ustart;
+}
+
+unsigned char* TranEscape(unsigned char* gb2312, long gsize, unsigned char* unicode, long &usize, long stupid)
+{
+	unsigned char *gstart = gb2312, *gend = gstart + gsize;
+	unsigned char *ustart = unicode;
+	unsigned char gchar;
+	WORD	oneword;
+
+	if (!gb2312 || !gsize || !unicode) return 0;
+
+	gchar = *gstart;
+	while (gstart<gend && gchar)
+	{
+		if ( gchar > 0x80 )
+		{
+			oneword = *((WORD*)gstart);
+			if (stupid) oneword = GBK_Unicode[oneword];			// for citic upload file control, post is unicode
+			*ustart++ = '%';
+			*ustart++ = 'u';
+			Myitoh(oneword, (char*&)ustart);
+			gstart += 2;
+		}
+		else
+		{
+			if (TRAN_POST_NEW[gchar])		//	may change to TRAN_POST_NEW
+			{
+				*ustart++ = '%';
+				Myitoh(gchar, (char*&)ustart);			//	network order HEX format
+				gstart++;
+			}
+			else *ustart++ = *gstart++;
+		}
+		gchar = *gstart;
+	}
+	if (!gchar) *ustart = 0;
+	usize = ustart - unicode;
+	return ustart;
+}
+
+#define			IS_INPUT			('I'+('N'<<8)+('P'<<16)+('U'<<24))
+#define			IS_TABLE			('T'+('A'<<8)+('B'<<16)+('L'<<24))
+#define			IS_HERF				('A')
+#define			KEY_ORDER			16
+#define			VAL_ORDER			18
+
+#define			INPUT_BEGIN			" value=\""
+#define			INPUT_END			"\">"
+PUCHAR FormatFormCITIC(PUCHAR formStart, long formLen, char* valStart, char* valEnd, PUCHAR mStart, long &nsize, CListItem *tempbuffer, long innest)
+{
+	PUCHAR keystart, keyend, keynow, resultstart;
+	PUCHAR inputend, tableend, hrefend, hrefEND, loopstart, loopend;
+	PULONG keycomp;
+	ContentPad *temppad = tempbuffer->HeadInfo;
+	char *nowvalstart, *nowvalend;
+	long loopsize;
+	long ret;
+	long shouldadd;
+
+	if (!formStart || !formLen || !valStart || !valEnd || !mStart || !tempbuffer) return 0;
+
+	keystart = keynow = formStart;
+	keyend = formStart + formLen;
+	resultstart = mStart;
+	
+	nowvalstart = valStart;
+	nowvalend = valEnd;
+
+	for (keynow = keystart; keynow < keyend; keynow++)
+	{
+		if (*keynow == '<')
+		{
+			keycomp = (PULONG)(keynow + 1);
+			if (((*keycomp) & ~0x20202020) == IS_INPUT )
+			{
+				inputend = FormatInputCITIC(keynow, keyend, resultstart, shouldadd);
+				if (shouldadd)
+				{
+					if (!inputend) break;
+					Wafa_Var(NULL, tempbuffer, (char*)keynow, (char*)inputend, NASZ("dm_name"), KEY_ORDER, NULL);
+					if (temppad->resultKey[KEY_ORDER] == NULL)
+					{
+						*resultstart++ = *keynow;
+						continue;
+					}
+
+					ret = GetCITICValue((PUCHAR)temppad->resultKey[KEY_ORDER], (PUCHAR)temppad->resultKey[KEY_ORDER] + temppad->getLength[KEY_ORDER], 
+						nowvalstart, nowvalend, temppad->resultKey[VAL_ORDER], temppad->getLength[VAL_ORDER]);
+					resultstart = AddString(resultstart, NASZ(INPUT_BEGIN));
+					if (ret != VALUE_NOT_FOUND)
+						resultstart = AddString(resultstart, temppad->resultKey[VAL_ORDER], temppad->getLength[VAL_ORDER]);
+					else
+						resultstart = AddString(resultstart, NASZ("NOT FOUND VALUE"));
+					resultstart = AddString(resultstart, NASZ(INPUT_END));
+
+				}
+
+				keynow = inputend - 1;
+			}
+			else if (((*keycomp) & ~0x20202020) == IS_TABLE )
+			{
+				tableend = (PUCHAR)memchr(keynow, '>', keyend - keynow);
+				if (!tableend) break;
+				Wafa_Var(NULL, tempbuffer, (char*)keynow, (char*)tableend, NASZ("group_name="), KEY_ORDER, NULL);
+				if ((temppad->resultKey[KEY_ORDER] == NULL) || innest)
+				{
+					*resultstart++ = *keynow;
+					continue;
+				}
+				else
+				{
+					tableend = (PUCHAR)memstr((char*)keynow, keyend - keynow, NASZ("</TABLE>"));
+					if (!tableend) break;
+					tableend += (sizeof("</TABLE>") - 1);
+
+					loopstart = (PUCHAR)memstr((char*)keynow, tableend - keynow, NASZ("<TR"));
+					if (!loopstart) break;
+					loopstart += 4;
+					loopstart = (PUCHAR)memstr((char*)loopstart, tableend - loopstart, NASZ("<TR"));
+					if (!loopstart) break;
+					loopend = (PUCHAR)memstr((char*)loopstart, tableend - loopstart, NASZ("</TR>"));
+					if (!loopend) break;
+					loopend += (sizeof("</TD>") - 1);
+
+					char *subkeystart, *subkeyend, *nowstart, *nowend, *groupend;
+					subkeystart = temppad->resultKey[KEY_ORDER];
+					subkeyend = temppad->resultKey[KEY_ORDER] + temppad->getLength[KEY_ORDER];
+
+					loopsize = 0;
+					FormatFormCITIC(keynow, loopstart - keynow, valStart, valEnd, resultstart, loopsize, tempbuffer, 1);	// in nest
+					resultstart += loopsize;
+
+					nowstart = 0;
+					while (!GetCITICGroup((PUCHAR)subkeystart, (PUCHAR)subkeyend, valStart, valEnd, nowstart, nowend, groupend))
+					{
+						loopsize = 0;
+						FormatFormCITIC(loopstart, loopend - loopstart, nowstart, nowend, resultstart, loopsize, tempbuffer, 1);// in nest
+						resultstart += loopsize;
+					}
+					loopsize = 0;
+					FormatFormCITIC(loopend, tableend - loopend, valStart, valEnd, resultstart, loopsize, tempbuffer, 1);	// in nest
+					resultstart += loopsize;
+					keynow = tableend - 1;
+					continue;
+				}
+			}
+			else if (((*keycomp) & ~0xffff2020) == IS_HERF)
+			{
+				hrefend = (PUCHAR)memstr((char*)keynow, keyend - keynow, NASZ("</a>"));
+				hrefEND = (PUCHAR)memstr((char*)keynow, keyend - keynow, NASZ("</A>"));
+				if (!hrefend) hrefend = keyend;
+				if (!hrefEND) hrefEND = keyend;
+				keynow = min(hrefend, hrefEND);
+				if (keynow == keyend) break;
+				keynow += (sizeof("</a>") -2);
+				continue;
+			}
+			else *resultstart++ = *keynow;
+		}
+		else *resultstart++ = *keynow;
+
+	}
+
+	nsize = resultstart - mStart;
+
+
+// 	memcpy(mStart, formStart, formLen);
+// 	nsize = formLen;
+	return mStart;
+}
+
+#define FULL_BLANK(key)														\
+	search = (PUCHAR)memstr((char*)resultStart, keylen, NASZ(key));			\
+	if (search)																\
+	{																		\
+		searchend = search + sizeof(key) - 1;								\
+		while (*searchend != ' ' && searchend < resultend) searchend++;	\
+		memset(search, ' ', searchend-search);								\
+	}
+
+PUCHAR FormatInputCITIC(PUCHAR inputStart, PUCHAR end, PUCHAR &resultStart, long &shouldadd)	//	return endof input place of '>', but do NOT copy / and >
+{
+	if (!inputStart || !end || !resultStart) return 0;
+// 	PUCHAR &result = (PUCHAR)&resultStart;
+	PUCHAR keyend;//, anotherend;;
+	long keylen;
+	PUCHAR search, searchend, resultend;
+
+	// remove value=, disable
+	shouldadd = 0;
+
+	keyend = (PUCHAR)memchr(inputStart, '>', end - inputStart);
+	if (!keyend) return 0;
+	keylen = keyend - inputStart;
+// 	anotherend = (PUCHAR)memchr(inputStart, '/', keyend - inputStart);
+// 	if (anotherend) keyend = anotherend;
+	
+	if (((PUCHAR)memstr((char*)inputStart, keylen, NASZ("dm_displaytype=\"hidden\""))) ||
+		(PUCHAR)memstr((char*)inputStart, keylen, NASZ("type=\"hidden\"")))
+	{
+		shouldadd = 0;
+		return keyend + 1;
+	}
+
+	resultend = resultStart + keylen;
+
+	memcpy(resultStart, inputStart, keylen);
+	search = (PUCHAR)memstr((char*)resultStart, keylen, NASZ(" disabled "));
+	if (search) memcpy(search, NASZ(" readonly "));
+
+	FULL_BLANK(" value=");
+	FULL_BLANK(" onclick=");
+
+// 	search = (PUCHAR)memstr((char*)resultStart, keylen, NASZ(" value="));
+// 	if (search)
+// 	{
+// 		searchend = search + sizeof(" value=") - 1;
+// 		while (*searchend != ' ' && searchend < resultend) searchend++;
+// 		memset(search, ' ', searchend-search);
+// 	}
+
+
+	if ((PUCHAR)memstr((char*)resultStart, keylen, NASZ(" dm_displaytype=\"number\" ")) ||
+		(PUCHAR)memstr((char*)resultStart, keylen, NASZ(" class=\"num\" ")))
+		resultend = AddString(resultend, NASZ(" style=\"TEXT-ALIGN: right; border:none\""));
+	else
+		resultend = AddString(resultend, NASZ(" style=\"border:none\""));
+	shouldadd = 1;
+	resultStart = resultend;
+	return keyend + 1;
+}
+
+PUCHAR Bmemchr(PUCHAR charend, UCHAR search, PUCHAR charstart)
+{
+	while (charend >= charstart) 
+	{
+		charend --;
+		if (*charend == search) return charend;
+	}
+	return 0;
+}
+#define		PATHMARK			'/'
+
+PUCHAR GetFilePath(PUCHAR fileStart, long fileLen, PUCHAR mStart, long &nsize)
+{
+	if (!fileStart || !fileLen || !mStart) return 0;
+	PUCHAR pathend = Bmemchr(fileStart + fileLen, PATHMARK, fileStart);
+	if (pathend)
+	{
+		pathend ++;
+		nsize = pathend - fileStart;
+		memcpy (mStart, fileStart, nsize);
+	}
+	else nsize = 0;
+	return 0;
+}
+
+
+PUCHAR TranslatePath(PUCHAR pathStart, long pathLen, char* fileStart, char* fileEnd, PUCHAR mStart, long &nsize)
+{
+	PUCHAR pathend, pathnow, resultstart;
+
+	if (!pathStart || !pathLen || !fileStart || !fileEnd || !mStart) return 0;
+	if (*fileStart == PATHMARK)
+	{
+		memcpy(mStart, fileStart, fileEnd - fileStart);
+		nsize = fileEnd - fileStart;
+		return 0;
+	}
+	resultstart = mStart;
+	pathend = pathStart + pathLen;
+	if (*(pathend - 1) == PATHMARK) pathend --;
+	pathnow = pathend;
+	while (TRUE)
+	{
+		if ((*fileStart=='.') && (*(fileStart+1)=='.'))
+		{
+			if  ( (*(fileStart+2) != PATHMARK) || fileStart+3 >= fileEnd) return 0;
+			fileStart += 3;
+			pathend = Bmemchr(pathend, PATHMARK, pathStart);
+			if (!pathend) return 0;
+			continue;
+		}
+		if (*fileStart=='.')
+		{
+			if  ( (*(fileStart+1) != PATHMARK) || fileStart+2 >= fileEnd) return 0;
+			fileStart += 2;
+			continue;
+		}
+		pathLen = pathend-pathStart;
+		memcpy(resultstart, pathStart, pathLen);
+		resultstart += pathLen;
+		*resultstart = PATHMARK;
+		resultstart ++;
+		pathLen = fileEnd - fileStart;
+		memcpy(resultstart, fileStart, pathLen);
+		resultstart += pathLen;
+		break;
+	}
+
+	nsize = resultstart - mStart;
+	return mStart;
+}
+
+static const unsigned char pr2six[256] =
+{
+	/* ASCII table */
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 62, 64, 64, 64, 63,
+	52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 64, 64, 64, 64, 64, 64,
+	64,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
+	15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 64, 64, 64, 64, 64,
+	64, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+	41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
+};
+
+unsigned char* Base64Decode(unsigned char* base64str, long bsize, unsigned char* normalstr, long &nsize)
+{
+	unsigned char *bufin, *bufout;
+	long remainbyte = bsize;
+
+	if ( *(base64str + remainbyte - 1) == '=' ) remainbyte--;
+	if ( *(base64str + remainbyte - 1) == '=' ) remainbyte--;
+	if ( *(base64str + remainbyte - 1) == '=' ) remainbyte--;
+
+	nsize = ((bsize + 3) / 4) * 3;
+	bufin = base64str;
+	bufout = normalstr;
+
+	while (remainbyte > 4)
+	{
+		*(bufout++) =
+			(unsigned char) (pr2six[*bufin] << 2 | pr2six[bufin[1]] >> 4);
+		*(bufout++) =
+			(unsigned char) (pr2six[bufin[1]] << 4 | pr2six[bufin[2]] >> 2);
+		*(bufout++) =
+			(unsigned char) (pr2six[bufin[2]] << 6 | pr2six[bufin[3]]);
+		bufin += 4;
+		remainbyte -= 4;
+	}
+	if (remainbyte > 1) {
+		*(bufout++) =
+			(unsigned char) (pr2six[*bufin] << 2 | pr2six[bufin[1]] >> 4);
+	}
+	if (remainbyte > 2) {
+		*(bufout++) =
+			(unsigned char) (pr2six[bufin[1]] << 4 | pr2six[bufin[2]] >> 2);
+	}
+	if (remainbyte > 3) {
+		*(bufout++) =
+			(unsigned char) (pr2six[bufin[2]] << 6 | pr2six[bufin[3]]);
+	}
+	nsize -= (4 - remainbyte) & 3;
+	return 0;
+}
+
+static const char basis_64[] =
+"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+unsigned char* Base64Encode(unsigned char* normalstr, long nsize, unsigned char* base64str, long &bsize)
+{
+	long i;
+	unsigned char *p;
+
+	p = base64str;
+	for (i = 0; i < nsize - 2; i += 3) {
+		*p++ = basis_64[(normalstr[i] >> 2) & 0x3F];
+		*p++ = basis_64[((normalstr[i] & 0x3) << 4) |
+			((int) (normalstr[i + 1] & 0xF0) >> 4)];
+		*p++ = basis_64[((normalstr[i + 1] & 0xF) << 2) |
+			((int) (normalstr[i + 2] & 0xC0) >> 6)];
+		*p++ = basis_64[normalstr[i + 2] & 0x3F];
+	}
+	if (i < nsize) {
+		*p++ = basis_64[(normalstr[i] >> 2) & 0x3F];
+		if (i == (nsize - 1)) {
+			*p++ = basis_64[((normalstr[i] & 0x3) << 4)];
+			*p++ = '=';
+		}
+		else {
+			*p++ = basis_64[((normalstr[i] & 0x3) << 4) |
+				((int) (normalstr[i + 1] & 0xF0) >> 4)];
+			*p++ = basis_64[((normalstr[i + 1] & 0xF) << 2)];
+		}
+		*p++ = '=';
+	}
+	bsize = p - base64str;
+	return 0;
+}
+
+#include <openssl/md5.h>
+
+unsigned char* MD5Encode(unsigned char* normalstr, long nsize, unsigned char* md5str, long &msize)
+{
+	unsigned char md5buf[20];
+	unsigned char* pmd5 = md5buf;
+
+	MD5_CTX ctx;
+	MD5_Init(&ctx);
+	MD5_Update(&ctx, normalstr, nsize);
+	MD5_Final(md5buf, &ctx);
+
+	for (int i=0; i<16; i++)
+	{
+		*md5str++ = ToHex[*pmd5 >> 4];
+		*md5str++ = ToHex[*pmd5++ & 0xf];
+	}
+
+	msize = 16*2;
+	return 0;
 }
 
 char* CommandLineParaTran (char* &inStart, long inLength, char* &outStart, long outLength,
@@ -999,9 +1461,14 @@ CListItem* ProcessChunkedCommand( CContextItem* mContext, CListItem* mBuffer, lo
 CListItem* ProcessMoreCommand( CContextItem* mContext, CListItem* mBuffer, long size )
 {
 	CListItem* moreBuffer = mContext->MoreBuffer;
-	if ((long)(moreBuffer->NProcessSize) + size > moreBuffer->BufferType->BufferSize)
+	CContextItem* messpeer;
+
+	if (mContext->MessageContext)
 	{
-// 		__asm int 3
+		messpeer = mContext->MessageContext->PPeer;			//	Add	Dec. 30 '14 for CONTEXT_MEMORY_FILE
+	}
+	else
+	{
 		moreBuffer->NProcessSize = 0;
 		mContext->BodyRemain = 0;
 		mContext->OverlapOffset = 0;
@@ -1009,12 +1476,39 @@ CListItem* ProcessMoreCommand( CContextItem* mContext, CListItem* mBuffer, long 
 		mContext->ContentMode = CONTENT_MODE_HEAD;
 		return mBuffer;
 	}
-	else
+
+	if (messpeer->DyControl & FLAG_MEMORY_FILE)			//	add Dec. 30 '14			//	only for mContext is SERVER side
 	{
-		memcpy ( ((char*)(moreBuffer+1))+moreBuffer->NProcessSize, (char*)(mBuffer+1), size );
+		if (!messpeer->DyMemoryFile)
+		{
+			messpeer->DyMemoryFile = new COleStreamFile;
+			messpeer->DyMemoryFile->CreateMemoryStream(NULL);
+		}
+
+		messpeer->DyMemoryFile->Write(REAL_BUFFER(mBuffer), size);
 		moreBuffer->NProcessSize += size;
 		mBuffer->NProcessSize = 0;
 	}
+	else
+	{
+		if ((long)(moreBuffer->NProcessSize) + size > moreBuffer->BufferType->BufferSize)
+		{
+	// 		__asm int 3
+			moreBuffer->NProcessSize = 0;
+			mContext->BodyRemain = 0;
+			mContext->OverlapOffset = 0;
+			mBuffer->NProcessSize = BUFFER_TOO_LARGE;
+			mContext->ContentMode = CONTENT_MODE_HEAD;
+			return mBuffer;
+		}
+		else
+		{
+			memcpy (REAL_BUFFER(moreBuffer)+moreBuffer->NProcessSize, REAL_BUFFER(mBuffer), size );
+			moreBuffer->NProcessSize += size;
+			mBuffer->NProcessSize = 0;
+		}
+	}
+
 	if (mContext->BodyRemain) 
 		return mBuffer;
 	else
@@ -1043,6 +1537,112 @@ void DisplayContextList()
 	}
 	printf("\r\n");
 }
+
+void ClearCache(char* pathname, long timebefore)		// for FILETIME, hi-DWORD 200 about 1 day 
+{
+	char filepathname [MAX_PATH];
+	long pathlen;
+	char* namestart;
+	WIN32_FIND_DATA fdata;
+	HANDLE handle;
+	SYSTEMTIME	nowsystemtime;
+	FILETIME	nowfiletime;
+	DWORD &hifiletime = nowfiletime.dwHighDateTime;
+	
+	GetSystemTime(&nowsystemtime);
+	SystemTimeToFileTime(&nowsystemtime, &nowfiletime);
+	hifiletime -= timebefore;
+	strcpy_s(filepathname, MAX_PATH, pathname);
+	pathlen = strlen(filepathname);
+	namestart = &filepathname[pathlen];
+	pathlen = MAX_PATH - pathlen - 2;
+
+	strcpy_s(namestart, pathlen , "*.*");
+	handle = FindFirstFile(filepathname, &fdata);
+	if (handle == INVALID_HANDLE_VALUE) return;
+	do 
+	{
+		if (fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+		if (fdata.ftLastAccessTime.dwHighDateTime < hifiletime)
+		{
+			strcpy_s(namestart, pathlen, fdata.cFileName);
+			DeleteFile(filepathname);
+		}
+	} 
+	while(FindNextFile(handle, &fdata));
+}
+
+// Mar. 10 '15\\
+
+#include "atlimage.h"
+using namespace Gdiplus;
+
+int ChangeImg(CContextItem* mContext, CListItem* serBuffer, int width)
+{
+	CImage *sourImage, *descImage;
+	COleStreamFile *sourFile, *descFile;
+	int newx, newy;
+	double changeradio;
+	HDC ddc;
+
+	char *tpointer = REAL_BUFFER(serBuffer);
+	if (mContext->DyMemoryFile) sourFile = mContext->DyMemoryFile;
+	else return 1;
+
+	descFile = new COleStreamFile;
+	sourImage = new CImage;
+	descImage = new CImage;
+	if (!descFile || !sourImage || !descImage)
+	{
+		mContext->DyMemoryFile = 0;
+		sourFile->Close();
+		if (sourFile) delete sourFile;
+		if (descFile) delete descFile;
+		if (sourImage) delete sourImage;
+		if (descImage) delete descImage;
+		return 1;
+	}
+	descFile->CreateMemoryStream(NULL);
+	sourFile->SeekToBegin();
+	sourImage->Load(sourFile->GetStream());
+	serBuffer->NProcessSize = (UINT)0;					// add this in Mar. 26 '15
+
+	if (!sourImage->IsNull())
+	{
+		newx = sourImage->GetWidth();
+		newy = sourImage->GetHeight();
+		if (newx > 0 && newy > 0)
+		{
+			changeradio = (double)newx / width;
+			newx = width;
+			newy = (int)(newy/changeradio);
+
+			descImage->Create(newx, newy, 16);
+			ddc = descImage->GetDC();
+			::SetStretchBltMode(ddc, HALFTONE);
+			sourImage->StretchBlt(ddc,0,0,newx,newy,SRCCOPY);
+			descImage->ReleaseDC();
+
+			descImage->Save(descFile->GetStream(), ImageFormatJPEG);
+			ULONGLONG fsize = descFile->GetLength();
+			descFile->SeekToBegin();
+
+			descFile->Read(tpointer, (UINT)fsize);
+			serBuffer->NProcessSize = (UINT)fsize;
+		}
+	}
+	sourImage->Destroy();
+	descImage->Destroy();
+	delete sourImage;
+	delete descImage;
+	mContext->DyMemoryFile = 0;
+	sourFile->Close();
+	descFile->Close();
+	delete sourFile;
+	delete descFile;
+	return 0;
+}
+
 
 #ifdef	QRCODE_FUNCTION
 

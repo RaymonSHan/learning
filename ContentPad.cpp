@@ -73,7 +73,7 @@ long CContentPadServer::OnClientRead(CContextItem* mContext, CListItem* &mBuffer
 	memset(clientPad, 0 , sizeof(ContentPad));
 
 	usedBuffer = ProcessFullCommand(mContext, usedBuffer, size);
-	if (usedBuffer->NProcessSize < 0) break;
+	if (usedBuffer->NProcessSize < 0 || usedBuffer->NProcessSize == BUFFER_TOO_LARGE) break;
 
 	if (usedBuffer->NProcessSize == 0)
 	{
@@ -105,12 +105,13 @@ long CContentPadServer::OnClientRead(CContextItem* mContext, CListItem* &mBuffer
 	cliPad->resultKey[HEADINFO_BOUNDARY] = &(urlinfo->getBoundary[0]);
 	//	here 7 is the order of AnalysisHttpURL
 	cliPad->getLength[HEADINFO_BOUNDARY] = urlinfo->getLength[7];				// the only fast way to finish multipart boundary
+	cliPad->inConcurrency = 0;						//	add in Dec. 19 '14 for ContentPad not response client.
 
 	while (TRUE)
 	{
 		ret_err = 0x30;
 		if (mContext->PPeer != mContext) serContext = mContext->PPeer;
-		else serContext = PreparePeer(mContext, fileBuffer);			// should change	//	May 08 '14,	Attention AddContentList
+		else serContext = PreparePeer(mContext, fileBuffer);			// should change	//	May 08 '14,	Attention AddContentList\
 
 		ret_err = 0x40;
 		if (serContext)
@@ -127,7 +128,7 @@ long CContentPadServer::OnClientRead(CContextItem* mContext, CListItem* &mBuffer
 				if (userPara)
 				{
 					userParaLength = urllength - ( userPara - urlinfo->getURL );
-					GetClientPara(mContext, usedBuffer, urlinfo->getURL, urllength, 0);
+//					GetClientPara(mContext, usedBuffer, urlinfo->getURL, urllength, 0);		// may not use it again.	// remove this function Nov. 21 '14
 					filenamelength = userPara - urlinfo->getURL;
 				}
 				else filenamelength = urllength;
@@ -139,7 +140,7 @@ memcpy( (char*)(fileBuffer+1), urlinfo->getURL, filenamelength );			// unkonw re
 			{
 				userPara = (char*)(usedBuffer+1);
 				userParaLength = usedBuffer->NProcessSize;
-				GetClientPara(mContext, usedBuffer, userPara, userParaLength, POST_PARAMETER_START);
+//				GetClientPara(mContext, usedBuffer, userPara, userParaLength, POST_PARAMETER_START);		// may not use it again.	// remove this function Nov. 21 '14
 			}
 
 			*(((char*)(fileBuffer+1))+filenamelength) = 0;
@@ -212,6 +213,11 @@ long CContentPadServer::OnClientWrite(CContextItem* mContext, CListItem* &mBuffe
 		return ( NoneProFunc(mContext->PPeer->PProtocol, fPostReceive)																//
 			(mContext->PPeer, mBuffer, mBuffer->BufferType->BufferSize, OP_SERVER_READ, opSide) );									//
 	}
+	else if ( (mContext->PPeer != mContext) && (protocolnumber == PROTOCOL_TCPREAD) )
+	{
+		return ( NoneProFunc(mContext->PPeer->PProtocol, fPostReceive)																//
+			(mContext->PPeer, mBuffer, mBuffer->BufferType->BufferSize, OP_SERVER_READ, opSide) );									//
+	}
 	else
 	{
 //	After ClientWrite, should close client		//	May 25 '14
@@ -273,8 +279,27 @@ long CContentPadServer::OnServerRead(CContextItem* mContext, CListItem* &mBuffer
 
 //	Restore PPeer link and close fileContext
 //	for Encap, Decap, the NoneAppFunc::fOnClise will not close mContext while (peerContext->PPeer != mContext)
-		ret = OnHttpFileRead(cliContext, mBuffer, size);
-		if (ret) break;
+
+//////////////////////////////////////////////////////////////////////////////////////
+//	change in Dec. 21 '14 for READ file, while FILE context already have, means it is READ file, or it is FILE context
+//	this means, FILE context must be the first file read.
+		CListItem *fileContent;
+		fileContent = GetContentByName(cliContext, CONTENT_NAME_FILE);
+		if (fileContent)
+		{
+			AddtoContentList(cliContext, mBuffer, mContext->ServerName);
+// 			usedBuffer = NULL;
+			ret = OnRemoteServerRead(cliContext, mBuffer, size);
+		}
+		else
+		{
+			ret = OnHttpFileRead(cliContext, mBuffer, size);
+			if (ret) break;
+		}
+// 		ret = OnHttpFileRead(cliContext, mBuffer, size);
+// 		if (ret) break;
+//////////////////////////////////////////////////////////////////////////////////////
+
 // */
 
 //	following is alternative, have not heavy test, But I have received release twice		// Oct. 24 '13
@@ -287,6 +312,7 @@ long CContentPadServer::OnServerRead(CContextItem* mContext, CListItem* &mBuffer
 
 
 //	It is a ERROR, for close the fileContext while read normal file, such as attachment		//	Oct. 22 '12
+
 		ret = NoneAppFunc(mContext->PApplication, fOnClose)(mContext, isNULL, FLAG_GRACE_CLOSE, opSide);
 		if (ret) break;
 	}
@@ -306,9 +332,7 @@ long CContentPadServer::OnServerRead(CContextItem* mContext, CListItem* &mBuffer
 		mBuffer = ProcessFullCommand(mContext, mBuffer, size);
 // 		if (mBuffer->NProcessSize < 0) break;
 
-		if (mBuffer->NProcessSize & 0x10000000) 
-			break;
-
+		if (mBuffer->NProcessSize & 0x10000000) break;
 		if (mBuffer->NProcessSize == 0)
 		{
 			ret_err = 0x40;
@@ -368,6 +392,7 @@ long CContentPadServer::OnServerRead(CContextItem* mContext, CListItem* &mBuffer
 			if (!ret) ret_err = 0;
 			break;
 		}
+
 //	re-remove it for keep-alive, May 22 '14
 // 		cliContext->PPeer = cliContext;							//	Add this two line		//	Jun 21 '13
 // 		mContext->PPeer = mContext;								//	Add this two line		//	Jun 21 '13
@@ -402,16 +427,52 @@ long CContentPadServer::OnServerRead(CContextItem* mContext, CListItem* &mBuffer
 		}
 		if (ret || retclose) break;
 	}
+	else if (nProtocol==PROTOCOL_TCPREAD)
+	{
+		ret = NoneProFunc(cliContext->PProtocol, fPostSend)(cliContext, mBuffer, mBuffer->NProcessSize, OP_CLIENT_WRITE, 0);
+		if (!ret) ret_err = 0;
+		break;
+	}
 
 	__CATCH(MODULE_APPLICATION, "CContentPadServer - OnServerRead")
 }																																	//
 
 long CContentPadServer::OnServerWrite(CContextItem* mContext, CListItem* &mBuffer, long size, long opSide)
 {
-	//	In fact it will not be run
-	mBuffer->NProcessSize = 0;
-	return ( NoneProFunc(mContext->PProtocol, fPostReceive)																			//
-		(mContext, mBuffer, mBuffer->BufferType->BufferSize, OP_SERVER_READ, opSide) );														//
+	long ret_err = 0x01;																											//
+	int nProtocol = mContext->PProtocol->ProtocolNumber;
+	CContextItem* cliContext = mContext->PPeer;
+	long ret;
+
+	__TRY
+	if (opSide == OP_CONTROL + OP_SERVER_WRITE)
+	{
+		mContext->OpSideControl = 0;
+		//	Add this segment for WAIT;	//	Add Dec. 25 '14,		//	a lazy way for entry again
+		//	Here mContext is CLIENT context
+		AddtoContentList(mContext, mBuffer, "WAITuse");
+		ret = OnRemoteServerRead(mContext, mBuffer, size);
+		if (ret) break;
+	}
+	else 
+	{
+		if (nProtocol==PROTOCOL_FILE)
+		{
+			ret = OnRemoteServerRead(cliContext, mBuffer, size);
+
+			ret = NoneAppFunc(mContext->PApplication, fOnClose)(mContext, isNULL, FLAG_GRACE_CLOSE, opSide);
+			if (ret) break;
+
+		}
+		if (nProtocol==PROTOCOL_TCP || nProtocol==PROTOCOL_TCP_POOL)
+		{
+		//	In fact it will not be run, for TCP, only ON_CONNECT return;
+			mBuffer->NProcessSize = 0;
+			return ( NoneProFunc(mContext->PProtocol, fPostReceive)																			//
+				(mContext, mBuffer, mBuffer->BufferType->BufferSize, OP_SERVER_READ, opSide) );														//
+		}
+	}
+	__CATCH(MODULE_APPLICATION, "CContentPadServer - OnServerWrite")
 }
 
 
@@ -419,14 +480,22 @@ long CContentPadServer::OnClose(CContextItem* mContext, CListItem* &mBuffer, lon
 {
 	CListItem* usedBuffer = mBuffer;
 	CContextItem* peerContext = mContext->PPeer;
+	long nProtocol;
 //	The ONLY thing to handle timeout for concurrency is this funciton		//	Apr. 28 '14
 // 	OnRemoteServerRead(mContext->PPeer, isNULL, 0);
 // 	if (size) OnRemoteServerRead(mContext->PPeer, isNULL, 0);				//	Apr. 29 '14
 
 	printf("In ContentPad close mContext:%x, peer:%x\r\n", mContext, mContext->PPeer);
-	if (mBuffer->NOperation == OP_CONNECT)
+	nProtocol = mContext->PProtocol->ProtocolNumber;
+
+//	Hard to do, now only go on when FILE protocol(maybe not go here any more), TCP close CLIENT context
+	if (( mBuffer->NOperation == OP_CONNECT) && 
+		(nProtocol!=PROTOCOL_TCP) && (nProtocol!=PROTOCOL_TCP_POOL) && (nProtocol!=PROTOCOL_TCPREAD))
+// 	if (mBuffer->NOperation == OP_CONNECT)
 	{
-		OnRemoteServerRead(mContext->PPeer, mBuffer, 0);		//	Apr. 30 '14
+//	I have remember, add the follow line for continue concurrency post, but it lost buffer
+//	delete in  Dec. 26 '14 for try
+// 		OnRemoteServerRead(mContext->PPeer, mBuffer, 0);		//	Apr. 30 '14
 		FreeApplicationBuffer(usedBuffer);
 		if (peerContext) peerContext->PPeer = peerContext;
 		mContext->PPeer = mContext;
@@ -436,7 +505,8 @@ long CContentPadServer::OnClose(CContextItem* mContext, CListItem* &mBuffer, lon
 	}
 // 	else
 // 		return CApplication::OnClose(mContext, mBuffer, size, opSide);
-		return CApplication::OnClose(mContext, mBuffer, FLAG_GRACE_CLOSE, opSide);
+//		return CApplication::OnClose(mContext, mBuffer, FLAG_GRACE_CLOSE, opSide);						//	remove it, for close all in Nov. 24 '14
+		return CApplication::OnClose(mContext, mBuffer, FLAG_GRACE_CLOSE, opSide);						//	should be 0 ??? Nov 24 '14
 
 }
 
@@ -457,7 +527,6 @@ long CContentPadServer::OnHttpFileRead(CContextItem* mContext, CListItem* &mBuff
 	CListItem* usedBuffer = mBuffer;//, *cliContent;
 
 	__TRY
-
 	if (urlinfo->getLength[MODE_POST] != VALUE_NOT_FOUND) 
 		bufferStart = memstr(bufferStart, mBuffer->NProcessSize, WAFA_POST_MARK, 15);
 	if (!bufferStart) bufferStart = REAL_BUFFER(mBuffer);
@@ -479,6 +548,7 @@ long CContentPadServer::OnHttpFileRead(CContextItem* mContext, CListItem* &mBuff
 //		ret = PrepareDefine(mContext, usedBuffer, cliPad, 0, wafaStart, wafaEnd);
 // 		do 
 // 		{
+
 		ret = PrepareDefine(mContext, usedBuffer, cliPad, 0, wafaStart, wafaEnd);
 // 			if (ret) break;
 // 		} while (wafaStart && wafaEnd && usedBuffer->HeadInfo->inConcurrency == CONCURRENCY_GOON);	// here usedBuffer is fileContent
@@ -502,29 +572,13 @@ long CContentPadServer::OnHttpFileRead(CContextItem* mContext, CListItem* &mBuff
 //	mContext is CLIENT context
 long CContentPadServer::OnRemoteServerRead(CContextItem* mContext, CListItem* &mBuffer, long size)									//
 {
-	CListItem* cliContent, *fileContent;
+	CListItem *cliContent, *fileContent;
 	ContentPad* cliPad;
 	char* wafaStart, *wafaEnd;
 	long ret;
 	long ret_err = 0x01;
 	CListItem* usedBuffer = mBuffer;
 	MYINT nowCon;
-
-// 	char iiipath[100]="c:\\log\\";
-// char iiibuf[20];
-// static int iii = 100;
-// itoa(iii, iiibuf, 10);
-// strcat(iiipath, iiibuf);
-// char iscr[]= "\r\n\r\n";
-// FILE* fi;
-// fi = fopen(strcat(iiipath, iiibuf), "w+b");
-// CListItem* shead = GetContentByName(mContext, CONTENT_NAME_SERVERHAED);
-// // if (!cliContent) break;
-// fwrite(REAL_BUFFER(shead), 1, shead->NProcessSize, fi);
-// fwrite(iscr, 1, 4, fi);
-// fwrite(REAL_BUFFER(mBuffer), 1, mBuffer->NProcessSize, fi);
-// fclose(fi);
-// iii++;
 
 	__TRY
 	ret_err = 0x10;
@@ -687,21 +741,33 @@ CListItem* ProcessFullCommand(CContextItem* mContext, CListItem* mBuffer, long s
 	if (mContext->ContentMode == CONTENT_MODE_LENGTH)
 	{
 		messContext = mContext->MessageContext;
+		if (!messContext || !messContext->MessageContext)		// following lines add Mar. 26 '15
+		{														//
+			newBuffer->NProcessSize = BUFFER_TOO_LARGE;			//
+		}														//
+		else													//
+		{														//
+			ret_err = 0x30;
+			if (mContext->TransferEncoding == ENCODING_LENGTH)
+			{
+				messContext->BodyRemain = mContext->BodyRemain;		// when BodyRemain is 0, means the packet is over
+				newBuffer = ProcessMoreCommand(messContext, mBuffer, size);
+			}
+			else if (mContext->TransferEncoding == ENCODING_CHUNKED)
+			{
+				newBuffer = ProcessChunkedCommand(messContext, mBuffer, size);
+			}
+		}
 
-		ret_err = 0x30;
-		if (mContext->TransferEncoding == ENCODING_LENGTH)
-		{
-			messContext->BodyRemain = mContext->BodyRemain;		// when BodyRemain is 0, means the packet is over
-			newBuffer = ProcessMoreCommand(messContext, mBuffer, size);
-		}
-		else if (mContext->TransferEncoding == ENCODING_CHUNKED)
-		{
-			newBuffer = ProcessChunkedCommand(messContext, mBuffer, size);
-		}
+		if (newBuffer->NProcessSize == BUFFER_TOO_LARGE)		// following lines add Mar. 26 '15
+		{														//
+			return newBuffer;									//
+		}														//
 
 		if (newBuffer->NProcessSize > 0)
 		{
 			mContext->ContentMode = CONTENT_MODE_HEAD;
+			messContext->MessageContext = 0;					// for CONTEXT_MEMORY_FILE	Dec. 30 '14
 			mContext->PProtocol->FreeProtocolContext(messContext);
 			mContext->MessageContext = 0;
 		}
@@ -726,6 +792,7 @@ CListItem* ProcessFullCommand(CContextItem* mContext, CListItem* mBuffer, long s
 		}
 		messContext = mContext->MessageContext;
 		messContext->PPeer = messContext;
+		messContext->MessageContext = mContext;				//	add for CONTEXT_MEMORY_FILE	//	Dec. 30 '14
 
 		ret_err = 0x60;
 		if (!messContext->MoreBuffer)
@@ -801,7 +868,10 @@ long ProcessWafaDefineRefer(CContextItem* mContext, CListItem* &mBuffer, Content
 	if (ret) break;
 	ret_err = 0x60;
 	if (wafaStart)											//	Add this for refer just before wafastart	//	May 01 '14
+	{
 		ret = ProcessWafaDefine(mContext, mBuffer, wafaStart, wafaEnd);	
+		if (ret) break;										//	Add Dec. 26 '14. when call OnRemoteServerRead in OnClose, may happen here
+	}
 	else
 		fileContent->HeadInfo->inConcurrency = CONCURRENCY_PAUSE;		//	end of define pause concurrency	//	May 01 '14
 
@@ -855,6 +925,8 @@ long abcfunction(void)
 	ASSERT(abc == 0);
 }
 
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	mContext is CLIENT side, mBuffer is data from OnServerRead																		//
 //	defineStart point to the begin of WAFA_DEFINE_START : "<!--wafadefine"															//
@@ -863,7 +935,7 @@ long abcfunction(void)
 long ProcessWafaDefine(CContextItem* mContext, CListItem* &mBuffer, char* defineStart, char* defineEnd)		
 {
 	long ret_err = 0x01;																											//
-	ContentPad *cliPad, *bufPad = mBuffer->HeadInfo;
+	ContentPad *cliPad, *bufPad = mBuffer->HeadInfo, *serPad;
 	long ret;
 	char* tpointer, *lengthPlace, *headPlace, *namefor;
 	CContextItem* oldSerContext;
@@ -887,6 +959,9 @@ long ProcessWafaDefine(CContextItem* mContext, CListItem* &mBuffer, char* define
 	char* bufferStart, *searchEnd;
 	WafaCreateFunciont createFunction = NULL;
 
+	CContentPadServer* pContentPad;
+// 	ProtocolId* peerProtocol;
+
 #ifdef DEBUG_WAFA
 	memcpy (wafadebug, defineStart, min(defineEnd-defineStart, MAX_DEBUG_STRING));
 	wafadebug[min(defineEnd-defineStart, MAX_DEBUG_STRING)] = 0;
@@ -906,7 +981,6 @@ long ProcessWafaDefine(CContextItem* mContext, CListItem* &mBuffer, char* define
 	SET_PARA_STR(bufPad, PARA_DEF_REFERNAME, serverReferName)
 	if ( CommandLineParaTran( defineStart, defineEnd-defineStart, NULL, NULL, WafaDefinePara, bufPad->valPlace, WafaDefineMap) ) break;	//
 
-
 	ret_err = 0x20;
 	if ( bufPad->getLength[PARA_DEF_REFERNAME] != VALUE_NOT_FOUND) 
 		referContent = GetContentByName(mContext, bufPad->serverReferName);
@@ -918,6 +992,7 @@ long ProcessWafaDefine(CContextItem* mContext, CListItem* &mBuffer, char* define
 	serBuffer = mContext->PApplication->GetApplicationBuffer();
 	if (!serBuffer) break;
 	tpointer = REAL_BUFFER(serBuffer);
+	serPad = serBuffer->HeadInfo;
 
 	ret_err = 0x40;
 	cliContent = GetContentByName(mContext, CONTENT_NAME_CLIENT);
@@ -928,6 +1003,31 @@ long ProcessWafaDefine(CContextItem* mContext, CListItem* &mBuffer, char* define
 	ret_err = 0x50;
 	fileContent = GetContentByName(mContext, CONTENT_NAME_FILE);
 	if (!fileContent) break;
+
+
+	ret_err = 0x52;
+	if (!memcmp(bufPad->serverMethod, NASZ("SETCONTEXT")))
+	{
+printf("in sercontext %p\r\n", mContext);
+		long contextflag = 0;
+		if (!memcmp(&bufPad->serverAction[1], NASZ(CONTEXT_MEMORY_FILE)))
+		{
+			contextflag = FLAG_MEMORY_FILE;
+		}
+
+		if ( bufPad->serverAction[0] == '+') mContext->DyControl |= contextflag;
+		if ( bufPad->serverAction[0] == '-') mContext->DyControl &= ~contextflag;
+
+		wafaStart = memstr(cliPad->checkStart, cliPad->checkEnd-cliPad->checkStart, NASZ(WAFA_DEFINE_START));
+		cliPad->checkStart = wafaStart + sizeof(WAFA_DEFINE_START);		//	step wafadefine
+		// 		PREPARE_DEFINE(FALSE)
+		PrepareDefine(mContext, usedBuffer, cliPad, 0, wafaStart, wafaEnd);
+
+		// 			if (!wafaStart || !wafaEnd) PrepareReply(mContext, usedBuffer, cliPad, 0, wafaStart, wafaEnd);	//	Move into PrepareDefine	// May 01 '14
+		mContext->PApplication->FreeApplicationBuffer(serBuffer);
+		ret_err = 0;
+		break;
+	}
 
 	ret_err = 0x60;
 	if (!memcmp(bufPad->serverMethod, NASZ("RESTART")))
@@ -954,10 +1054,12 @@ long ProcessWafaDefine(CContextItem* mContext, CListItem* &mBuffer, char* define
 
 		if (bufPad->getLength[4] == VALUE_NOT_FOUND || !indexvalue)			// without condition or condition is ok(0), restart;
 		{
-			ret_err = 0x31;
+			ret_err = 0x61;
 			ProcessOneVar(mContext, referContent->HeadInfo, tpointer, bufPad->serverAction, bufPad->serverAction+bufPad->getLength[0]);
 			//	should ignore Action="<--someting-->"
 			bufferStart = memstr_no(REAL_BUFFER(fileContent), fileContent->NProcessSize, REAL_BUFFER(serBuffer), tpointer-REAL_BUFFER(serBuffer), '"');
+
+
 			if (!bufferStart) break;
 			searchEnd = memstr(bufferStart, fileContent->NProcessSize, NASZ(WAFA_BODY_START));
 
@@ -986,6 +1088,123 @@ long ProcessWafaDefine(CContextItem* mContext, CListItem* &mBuffer, char* define
 		ret_err = 0;
 		break;
 	}
+	ret_err = 0x62;								//	add this define in Dec. 21 '14 for wait in wafascript
+	if (!memcmp(bufPad->serverMethod, NASZ("WAIT")))
+	{
+		int waitsecond = GetInt(bufPad->serverAction, bufPad->getLength[0]);
+		InterInc(&cliPad->inConcurrency);
+		mContext->OpSideControl = OP_CONTROL + OP_SERVER_WRITE;				//	when timeout, do OP_SERVER_WRITE
+		ReflushTimeout(mContext, waitsecond);
+		mContext->PApplication->FreeApplicationBuffer(serBuffer);
+
+		ret_err = 0;
+		break;
+	}
+
+//////////////////////////////////////////////////////////////////////////////////////
+	ret_err = 0x64;								//	add this define in Dec. 21 '14 for cache in wafascript
+//	add in Dec. 21 '14 for READ file, while FILE context already have, means it is READ file, or it is FILE context
+//	this means, FILE context must be the first file read.
+	if (!memcmp(bufPad->serverMethod, NASZ("READ")))
+	{
+		pContentPad = (CContentPadServer*)mContext->PApplication;
+		serContext = pContentPad->PreparePeer(mContext, (char*)&bufPad->serverHost[0]);
+		if (!serContext) break;
+// 		peerProtocol = serContext->PeerProtocol;
+
+		ProcessOneVar(mContext, referContent->HeadInfo, tpointer, bufPad->serverAction, bufPad->serverAction+bufPad->getLength[0]);
+		serBuffer->NProcessSize = tpointer - REAL_BUFFER(serBuffer);
+		*tpointer = 0;
+	
+// 		serContext->PPeer = serContext->PPeer;
+		if (oldSerContext) oldSerContext->PPeer = oldSerContext;
+		mContext->PPeer = serContext;
+		serContext->PPeer = mContext;
+
+		ret = NoneProFunc(serContext->PProtocol, fPostConnect)(serContext, serBuffer, serBuffer->NProcessSize, OP_CONNECT);
+
+// 		__int64 fileLength = );
+		if (ret || !(serContext->PProtocol->GetContextLength)(serContext, serBuffer))
+		{
+			mContext->PPeer = mContext;					//	add Dec. 28 '14
+			serContext->PPeer = serContext;
+
+			NoneAppFunc(serContext->PApplication, fOnClose)(serContext, isNULL, 0, 0);				
+			memcpy(REAL_BUFFER(serBuffer), NASZ("<-- NOT_FOULD_FILE_by_wafascript -->"));
+			AddtoContentList(mContext, serBuffer, bufPad->serverName);
+
+			wafaStart = memstr(cliPad->checkStart, cliPad->checkEnd-cliPad->checkStart, NASZ(WAFA_DEFINE_START));
+			cliPad->checkStart = wafaStart + sizeof(WAFA_DEFINE_START);		//	step wafadefine
+			// 		PREPARE_DEFINE(FALSE)
+			PrepareDefine(mContext, usedBuffer, cliPad, 0, wafaStart, wafaEnd);
+			ret_err = 0;
+		}
+		else
+		{
+
+			namefor = serContext->ServerName;		//	temp save server side pad name, for concurrency use instead of in client pad
+			if (bufPad->getLength[PARA_DEF_NAME] == VALUE_NOT_FOUND) strcpy_s(namefor, SMALL_CHAR, CONTENT_NAME_NONE);		// serverName
+			else strcpy_s(namefor, SMALL_CHAR, bufPad->serverName);
+
+			ret_err = 0x65;
+			InterInc(&cliPad->inConcurrency);
+			serContext->ContentMode = CONTENT_MODE_LENGTH;			//	For file read, without HTTP head
+			ret = NoneProFunc(serContext->PProtocol, fPostReceive)
+				(serContext, serBuffer, serBuffer->BufferType->BufferSize, OP_SERVER_READ, 0);
+			if (ret) break;
+			ret_err = 0;
+		}
+
+		break;
+	}
+//////////////////////////////////////////////////////////////////////////////////////
+	ret_err = 0x66;								//	add this define in Dec. 22 '14 for cache in wafascript
+	if (!memcmp(bufPad->serverMethod, NASZ("WRITE")))
+	{
+		CListItem *writeContent = GetContentByName(mContext, bufPad->serverName);
+		if (!writeContent) break;
+
+		pContentPad = (CContentPadServer*)mContext->PApplication;
+		serContext = pContentPad->PreparePeer(mContext, (char*)&bufPad->serverHost[0]);
+		if (!serContext) break;
+// 		peerProtocol = serContext->PeerProtocol;
+
+		ProcessOneVar(mContext, referContent->HeadInfo, tpointer, bufPad->serverAction, bufPad->serverAction+bufPad->getLength[0]);
+		serBuffer->NProcessSize = tpointer - REAL_BUFFER(serBuffer);
+		*tpointer = 0;
+		
+// 		serContext->PPeer = serContext->PPeer;
+		if (oldSerContext) oldSerContext->PPeer = oldSerContext;
+		mContext->PPeer = serContext;
+		serContext->PPeer = mContext;
+
+		ret = NoneProFunc(serContext->PProtocol, fPostConnect)(serContext, serBuffer, serBuffer->NProcessSize, OP_CONNECT);
+		serContext->PApplication->FreeApplicationBuffer(serBuffer);
+
+		if (ret)
+		{
+			mContext->PPeer = mContext;				//	add Dec. 28 '14
+			serContext->PPeer = serContext;
+
+			NoneAppFunc(serContext->PApplication, fOnClose)(serContext, isNULL, 0, 0);				
+			wafaStart = memstr(cliPad->checkStart, cliPad->checkEnd-cliPad->checkStart, NASZ(WAFA_DEFINE_START));
+			cliPad->checkStart = wafaStart + sizeof(WAFA_DEFINE_START);		//	step wafadefine
+			// 		PREPARE_DEFINE(FALSE)
+			PrepareDefine(mContext, usedBuffer, cliPad, 0, wafaStart, wafaEnd);
+			ret_err = 0;
+		}
+		else
+		{
+			InterInc(&cliPad->inConcurrency);
+			writeContent->ContentMode = CONTENT_MODE_LENGTH;
+			ret = NoneProFunc(serContext->PProtocol, fPostSend)
+				(serContext, writeContent, writeContent->NProcessSize, OP_SERVER_WRITE, 0);
+			if (ret) break;
+			ret_err = 0;
+		}
+		break;
+	}
+//////////////////////////////////////////////////////////////////////////////////////
 
 	ret_err = 0x68;								//	add this define in Nov. 18 '14 for simple wafascript
 	if (!memcmp(bufPad->serverMethod, NASZ("ADDPAGE")))
@@ -1003,6 +1222,61 @@ long ProcessWafaDefine(CContextItem* mContext, CListItem* &mBuffer, char* define
 		// 		if (!wafaStart || !wafaEnd) PrepareReply(mContext, usedBuffer, cliPad, 0, wafaStart, wafaEnd);	//	Move into PrepareDefine	// May 01 '14
 		//	have not test, but I think it should add
 //		mContext->PApplication->FreeApplicationBuffer(serBuffer);						// should add this? it lost buffer before add this, Apr. 25 '14
+		ret_err = 0;
+		break;
+	}
+
+	ret_err = 0x6a;								//	add this define in Dec. 1 '14 for loop in wafascript
+	if (!memcmp(bufPad->serverMethod, NASZ("DELPAGE")))
+	{
+		CListItem *delContent = GetContentByName(mContext, bufPad->serverName);
+		if (delContent)
+		{
+			ret_err = 0x6b;
+			strncpy_s(delContent->HeadInfo->nameFor, "DELETED", SMALL_CHAR);
+		}
+		wafaStart = memstr(cliPad->checkStart, cliPad->checkEnd-cliPad->checkStart, NASZ(WAFA_DEFINE_START));
+		cliPad->checkStart = wafaStart + sizeof(WAFA_DEFINE_START);		//	step wafadefine
+		// 		PREPARE_DEFINE(FALSE)
+		PrepareDefine(mContext, usedBuffer, cliPad, 0, wafaStart, wafaEnd);
+
+		// 			if (!wafaStart || !wafaEnd) PrepareReply(mContext, usedBuffer, cliPad, 0, wafaStart, wafaEnd);	//	Move into PrepareDefine	// May 01 '14
+		mContext->PApplication->FreeApplicationBuffer(serBuffer);
+		ret_err = 0;
+		break;
+	}
+
+	ret_err = 0x6c;								//	add this define in Dec. 23 '14 for change graph size
+	if (!memcmp(bufPad->serverMethod, NASZ("GRAPHSIZE")))
+	{
+		AddtoContentList(mContext, serBuffer, bufPad->serverName);
+		serBuffer->NProcessSize = 0;
+
+		char *sourgraph = REAL_BUFFER(referContent);
+		long lenlen = bufPad->getLength[0];
+
+		ProcessOneVar(mContext, referContent->HeadInfo, tpointer, bufPad->serverAction, bufPad->serverAction+lenlen);
+		lenlen = tpointer - REAL_BUFFER(serBuffer);
+		tpointer = REAL_BUFFER(serBuffer);
+
+		// 		lenstr = AddReferPlace(mContext,  referContent->HeadInfo, bufPad->serverAction, lenlen);
+
+		int orderwidth = GetInt(REAL_BUFFER(serBuffer), lenlen);
+
+		if (referContent->NProcessSize == 0 || orderwidth < 10 || orderwidth > 10000 ||
+			ChangeImg(mContext, serBuffer, orderwidth))
+		{
+			memcpy(tpointer, sourgraph, referContent->NProcessSize);
+			serBuffer->NProcessSize = referContent->NProcessSize;
+		}
+
+		wafaStart = memstr(cliPad->checkStart, cliPad->checkEnd-cliPad->checkStart, NASZ(WAFA_DEFINE_START));
+		cliPad->checkStart = wafaStart + sizeof(WAFA_DEFINE_START);		//	step wafadefine
+		// 		PREPARE_DEFINE(FALSE)
+		PrepareDefine(mContext, usedBuffer, cliPad, 0, wafaStart, wafaEnd);
+
+		// 			if (!wafaStart || !wafaEnd) PrepareReply(mContext, usedBuffer, cliPad, 0, wafaStart, wafaEnd);	//	Move into PrepareDefine	// May 01 '14
+// 		mContext->PApplication->FreeApplicationBuffer(serBuffer);
 		ret_err = 0;
 		break;
 	}
@@ -1064,6 +1338,12 @@ long ProcessWafaDefine(CContextItem* mContext, CListItem* &mBuffer, char* define
 		ret_err = 0;
 		break;
 	}
+
+	ret_err = 0x84;
+// 	if (!memcmp(bufPad->serverMethod, NASZ("GETREAD")))
+// 	{
+// 
+// 	}
 
 	ret_err = 0x90;
 	if (!memcmp(bufPad->serverMethod, NASZ("POST")))
@@ -1170,15 +1450,18 @@ long ProcessWafaDefine(CContextItem* mContext, CListItem* &mBuffer, char* define
 // 		}
 // //	Add this for keep-alive in May 22 '14
 	}
-	if (oldSerContext && !SameContextAddress(serContext, oldSerContext))
-	{
-		serContext->PProtocol->FreeProtocolContext(serContext);
-		serContext = oldSerContext;
-#ifdef	DEBUG_PEER
-	printf("Same addr, use old Context\r\n");
-#endif	DEBUG_PEER
-	}
-	else
+
+//	REMOVE same context		//	Dec. 12 '14, Remove again Jan. 08 '15
+//	REUSE same context, for I found reason for not response.
+// 	if (oldSerContext && !SameContextAddress(serContext, oldSerContext))
+// 	{
+// 		serContext->PProtocol->FreeProtocolContext(serContext);
+// 		serContext = oldSerContext;
+// #ifdef	DEBUG_PEER
+// 	printf("Same addr, use old Context\r\n");
+// #endif	DEBUG_PEER
+// 	}
+// 	else
 	{
 		if (oldSerContext) oldSerContext->PPeer = oldSerContext;
 		mContext->PPeer = serContext;
@@ -1208,7 +1491,7 @@ long ProcessWafaDefine(CContextItem* mContext, CListItem* &mBuffer, char* define
 	{
 		tpointer = AddString(tpointer, NASZ("Content-Length: "));
 		lengthPlace = tpointer;
-		tpointer = AddString(tpointer, "     \r\n", SMALL_CONTENT_LENGTH_SIZE + 2);		// ahead have SMALL_CONTENT_LENGTH_SIZE space
+		tpointer = AddString(tpointer, "       \r\n", SMALL_CONTENT_LENGTH_SIZE + 2);		// ahead have SMALL_CONTENT_LENGTH_SIZE space
 	}
 
 // 	if ( (bufPad->getLength[PARA_DEF_COOKIE] != VALUE_NOT_FOUND) &&			//	have Cookie= in wafafile
@@ -1402,7 +1685,7 @@ long ProcessHtmlReplay(CContextItem* mContext)//, CListItem* &mBuffer)
 
 	tpointer = AddString(tpointer, NASZ("Content-Length: "));
 	lengthPlace = tpointer;
-	tpointer = AddString(tpointer, "     \r\n", SMALL_CONTENT_LENGTH_SIZE+2);		// ahead have SMALL_CONTENT_LENGTH_SIZE space
+	tpointer = AddString(tpointer, "       \r\n", SMALL_CONTENT_LENGTH_SIZE+2);		// ahead have SMALL_CONTENT_LENGTH_SIZE space
 
 // Attention, Set-Cookie MUST be in the last command		// the order defend on HttpResPara
 	if (urlinfo->getLength[3] != VALUE_NOT_FOUND)				//	for Set-Cookie
@@ -1435,6 +1718,16 @@ long ProcessHtmlReplay(CContextItem* mContext)//, CListItem* &mBuffer)
 	//	tpointer point to really buffer
 	//	last two point between WAFA_BODY_START to WAFA_BODY_END
 	ret = ProcessWafaPage(mContext, mBuffer, tpointer, oldCheckEnd, fileEnd, ProcessWafaVars);
+
+	char *htmlstart, *htmlend;
+	htmlstart = memstr(REAL_BUFFER(fileContent), fileContent->NProcessSize, NASZ(WAFA_HTML_START));
+	htmlend =  memstr(htmlstart, fileContent->NProcessSize-(htmlstart-REAL_BUFFER(fileContent)), NASZ(WAFA_HTML_END));
+	if (htmlstart && htmlend)
+	{
+		htmlstart += (sizeof(WAFA_HTML_START) - 1);
+		ret = ProcessWafaPage(mContext, mBuffer, tpointer, htmlstart, htmlend, ProcessWafaVars);
+	}
+
 
 	ret_err = 0x50;
 	if (cliPad->checkEnd == oldCheckEnd)				// inter process ok, not change checkEnd
@@ -1532,32 +1825,34 @@ long TranCharsetInfo(CContextItem* tarContext, CContextItem* souContext, long ta
 
 long GetClientPara(CContextItem* mContext, CListItem* &mBuffer, char* paraStart, long paraLength, int nowPlace)
 {
-	ContentPad* clientPad = mBuffer->HeadInfo;
-	char* paraEnd = paraStart + paraLength;
-	char* paraNow = paraStart;
-	char* paraNext;
+	return 0;											//	remove this function in Nov 22 '14, for CLIENT page with many info
 
-	clientPad->resultKey[nowPlace] = paraStart;
-	clientPad->getLength[nowPlace] = paraLength;
-	nowPlace ++;
-
-	while (paraNow && (paraNow < paraEnd) )
-	{
-		paraNow = (char*)memchr(paraNow, '=', paraEnd-paraNow);
-		if (paraNow)
-		{
-			paraNow++;
-			paraNext = (char*)memchr(paraNow, '&', paraEnd-paraNow);
-			if (!paraNext) paraNext = paraEnd;
-			clientPad->resultKey[nowPlace] = paraNow;
-			clientPad->getLength[nowPlace] = paraNext-paraNow;
-			paraNow = paraNext+1;
-			nowPlace++;
-		}
-	}
-// 	clientPad->keyNumber = nowPlace;		//	NOT use keyNumber at all	//	May 24 '14
-
-	return nowPlace;
+// 	ContentPad* clientPad = mBuffer->HeadInfo;
+// 	char* paraEnd = paraStart + paraLength;
+// 	char* paraNow = paraStart;
+// 	char* paraNext;
+// 
+// 	clientPad->resultKey[nowPlace] = paraStart;
+// 	clientPad->getLength[nowPlace] = paraLength;
+// 	nowPlace ++;
+// 
+// 	while (paraNow && (paraNow < paraEnd) )
+// 	{
+// 		paraNow = (char*)memchr(paraNow, '=', paraEnd-paraNow);
+// 		if (paraNow)
+// 		{
+// 			paraNow++;
+// 			paraNext = (char*)memchr(paraNow, '&', paraEnd-paraNow);
+// 			if (!paraNext) paraNext = paraEnd;
+// 			clientPad->resultKey[nowPlace] = paraNow;
+// 			clientPad->getLength[nowPlace] = paraNext-paraNow;
+// 			paraNow = paraNext+1;
+// 			nowPlace++;
+// 		}
+// 	}
+// // 	clientPad->keyNumber = nowPlace;		//	NOT use keyNumber at all	//	May 24 '14
+// 
+// 	return nowPlace;
 }
 
 //	mBuffer is HeadInfo, start with nowPlace; paraStart and paraLength are buffer
@@ -1682,13 +1977,14 @@ long ProcessOneRefer(CContextItem* mContext, CListItem* mBuffer, char* &mStart, 
 	SET_PARA_STR(resultPad, PARA_REF_DEFAULT, serverDefault)
 	SET_PARA_STR(resultPad, PARA_REF_IF, serverIf)				//	Add If Jun. 30 '14
 
-	if ( CommandLineParaTran( referstart, referend-referstart, NULL, NULL, WafaReferPara, resultPad->valPlace, WafaReferMap) ) break;	//
+	if ( CommandLineParaTran( referstart, referend-referstart, NULL, NULL, WafaReferPara, resultPad->valPlace, WafaReferMap) ) 
+		break;	//
 	fileStart = referend;
 
-	if ( resultPad->getLength[PARA_REF_ENDREF] != VALUE_NOT_FOUND )
-	{
-		int aaa = 1;
-	}
+// 	if ( resultPad->getLength[PARA_REF_ENDREF] != VALUE_NOT_FOUND )
+// 	{
+// 		int aaa = 1;
+// 	}
 
 	ret_err = 0x30;											//	Method
 	if ( resultPad->getLength[PARA_REF_METHOD] == VALUE_NOT_FOUND ) break;
@@ -1732,38 +2028,42 @@ long ProcessOneRefer(CContextItem* mContext, CListItem* mBuffer, char* &mStart, 
 			{
 				nowstart = memstr(contentstart, contentend-contentstart, resultPad->serverStartName, resultPad->getLength[PARA_REF_STARTNAME]);
 // 				if (!nowstart) nowstart = contentstart;
-				if (!nowstart) break;
-
+//				if (!nowstart) break;								//	remove this line, for LoopAssign with Compare	// Dec. 10 '14
 			}
 			else nowstart = contentstart;
 
-			if (!nowstart) nowstart = contentstart;					//	Add Jul 17 '13 for not find Start;
-
-			ret_err = 0x70;											//	End
-			if ( resultPad->getLength[PARA_REF_ENDREF] != VALUE_NOT_FOUND && referContent)
-				nowend = (char*)referContent->HeadInfo->resultKey[resultPad->serverEndPlace];
-			else if ( resultPad->getLength[PARA_REF_END] != VALUE_NOT_FOUND )
-				nowend = contentstart + resultPad->serverEndPlace;
-			else if ( resultPad->getLength[PARA_REF_ENDNAME] != VALUE_NOT_FOUND) 
+			if (!nowstart)
 			{
-				nowend = memstr(nowstart, contentend-nowstart, resultPad->serverEndName, resultPad->getLength[PARA_REF_ENDNAME]);
-// 				if (!nowend) nowend = contentend;
-				if (!nowend) break;
-
+				nowstart = contentstart;							//	Add Jul 17 '13 for not find Start;
+				nowend = contentstart;								//	change to this, for LoopAssign with Compare	// Dec. 10 '14
 			}
-			else nowend = contentend;
-
-//	this two line for start and end for value use	//	Jun. 27 '14
-			if (nowstart < contentstart) nowstart = contentstart + ((long)nowstart);
-			if (nowend < contentstart) nowend = contentstart + ((long)nowend);
-
-
-			ret_err = 0x80;
-			if (nowstart >= nowend)
-
+			else													//	change to this, for LoopAssign with Compare	// Dec. 10 '14
 			{
-				nowstart = contentstart;
-				nowend = contentend;
+				ret_err = 0x70;											//	End
+				if ( resultPad->getLength[PARA_REF_ENDREF] != VALUE_NOT_FOUND && referContent)
+					nowend = (char*)referContent->HeadInfo->resultKey[resultPad->serverEndPlace];
+				else if ( resultPad->getLength[PARA_REF_END] != VALUE_NOT_FOUND )
+					nowend = contentstart + resultPad->serverEndPlace;
+				else if ( resultPad->getLength[PARA_REF_ENDNAME] != VALUE_NOT_FOUND) 
+				{
+					nowend = memstr(nowstart+resultPad->getLength[PARA_REF_STARTNAME], 
+						 contentend-nowstart-resultPad->getLength[PARA_REF_STARTNAME], resultPad->serverEndName, resultPad->getLength[PARA_REF_ENDNAME]);
+// 					if (!nowend) nowend = contentend;
+// 					if (!nowend) break;
+ 					if (!nowend) nowend = nowstart;						//	change to this, for LoopAssign with Compare	// Dec. 10 '14
+				}
+				else nowend = contentend;
+
+//		this two line for start and end for value use	//	Jun. 27 '14
+				if (nowstart < contentstart) nowstart = contentstart + ((long)nowstart);
+				if (nowend < contentstart) nowend = contentstart + ((long)nowend);
+
+				ret_err = 0x80;
+				if (nowstart >= nowend)
+				{
+					nowstart = contentstart;
+					nowend = contentend;
+				}
 			}
 
 			ret_err = 0x90;											//	Loop
@@ -1795,8 +2095,12 @@ long ProcessOneRefer(CContextItem* mContext, CListItem* mBuffer, char* &mStart, 
 		if (nowloop)			//	for loop control changed, Nov 17 '14
 		{
 			ret_err = 0;
-			nowstart = memstr(nowstart, nowend - nowstart, nowloop, loopstrlen);
-			if (nowstart) isloop = 1;
+			if (!nextstart) nowstart = memstr(nowstart, nowend - nowstart, nowloop, loopstrlen);
+			else nowstart = nextstart;
+
+			if (!nowstart) nowstart = nowend;				//	meet == 0, add in Nov. 25 '14
+
+			if (nowstart != nowend) isloop = 1;			// should change to this !!!!!! take me many hours		// Nov 18 '14
 			else break;
 			nextstart = memstr(nowstart + loopstrlen, nowend - nowstart - loopstrlen, nowloop, loopstrlen);
 			if (!nextstart) nextstart = nowend;
@@ -1870,8 +2174,10 @@ long ProcessOneRefer(CContextItem* mContext, CListItem* mBuffer, char* &mStart, 
 			// a lazy solution, I am crazy by error and error control
 
 			//	for process Loop in Scanf	//	Have not test YET	//	May 25 '14
-			if (resultPad->serverNowEnd) nowstart = resultPad->serverNowEnd;
-			else nowstart += loopstrlen;
+			if (resultPad->serverNowEnd) 
+				nowstart = resultPad->serverNowEnd;
+			else 
+				nowstart += loopstrlen;
 // 			nowstart += loopstrlen;
 		}
 		else
@@ -1948,6 +2254,10 @@ long ProcessWafaVars(CContextItem* mContext, ContentPad* hInfo, char* &mStart, c
 	}
 	return 0;
 }
+
+#define BUFFER2HEADINFO			(NORMAL_BUFFER_SIZE + sizeof(CListItem) - 4*PAGE_SIZE)		// because of BufferSize and sub it
+// it is oxfd0a0
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	copy from fileStart to fileEnd to mStart, and translateSpace wafavar depended on mBuffer->HeadInfo									//
 //	can set a sub range by last four parameter, but I have not use yet																//
@@ -1968,12 +2278,30 @@ long ProcessOneVar(CContextItem* mContext, ContentPad* hInfo, char* &mStart, cha
 	long removeCR;
 	long trantoGB, trantoUTF;
 	long tranQRCode;
+	long tranCondition;
+	long trantoHtml;
+	long trantoMD5;
+	long tranStupid;			//	for stupid Citic erp upload file, input is GB code Chinese, output is %uxxxx, where xxxx is unicode
+	long formatForm;			//	so hard work	//	Dec. 27 '14
+	long decode64, encode64;
+	long tranPath;
+	long getPath;
 	char *tranpoint;
 	int i;
 
 #ifdef DEBUG_WAFA
 	char* oldstart = mStart;
 #endif DEBUG_WAFA
+	char *stringStart = 0;
+	long stringLen = 0;
+	char stringKey[SMALL_CHAR];
+	long stringKeyLen = 0;
+	char *oldStringStart = 0;
+	long oldStringLen = 0;
+
+	int kplace, vallen;
+	char *valstart;
+	CListItem *tempbuffer;
 
 	__TRY
 
@@ -2013,7 +2341,15 @@ long ProcessOneVar(CContextItem* mContext, ContentPad* hInfo, char* &mStart, cha
 		translatePost = FALSE;
 		trantoGB = trantoUTF = FALSE;
 		tranQRCode = FALSE;
+		tranCondition = FALSE;
+		trantoHtml = FALSE;
+		decode64 = encode64 = FALSE;
 		removeCR = FALSE;
+		trantoMD5 = FALSE;
+		tranStupid = FALSE;
+		formatForm = FALSE;
+		tranPath = FALSE;
+		getPath = FALSE;
 
 		varnow = (char*)memchr(varstart, '%', varend-varstart);
 		if (!varnow) varnow = varend;
@@ -2042,6 +2378,64 @@ long ProcessOneVar(CContextItem* mContext, ContentPad* hInfo, char* &mStart, cha
 				}
 				else break;
 			}
+			else if ( (idn =='V' || idn == 'H') && (firstn == ':') )		// %V could not use %r ????			// should do more for name="aa" id="aa" value="bb", add middle_str
+			{                                        // have error for %r %V together, %r:CLIENT%d11  %V:xxx%d00 while default page is info, it will choice CLIENT for %V
+				if (otherPad)								// try for add this, 
+				{
+					resultPad = otherPad;
+					otherPad = 0;
+				}											// maybe ok should do more for %r %V/%v together
+				else resultPad = hInfo;						//
+
+				varnext = (char*)memchr(varnow+3, '%', varend-varnow-3);
+				if (varnext)
+				{
+					CListItem *varBuffer = (CListItem *)((char*)resultPad - BUFFER2HEADINFO);
+					if (varBuffer->HeadInfo != resultPad) break;
+					char *varStrBuffer = REAL_BUFFER(varBuffer);
+					char *varStrEnd = varStrBuffer + varBuffer->NProcessSize;
+					char *keyStart, *stringEnd;
+
+					if (idn == 'V')
+					{
+						stringKey[0] = '"';
+						stringKeyLen = varnext - varnow - 3;
+						memcpy(&stringKey[1], varnow+3, stringKeyLen);						// should use another safe one
+						stringKey[stringKeyLen + 1] = '"';
+						keyStart = memstr(varStrBuffer, varBuffer->NProcessSize, stringKey, stringKeyLen + 2);
+						if (!keyStart) break;
+
+						keyStart += (stringKeyLen + 2);
+						while ((keyStart < varStrEnd) && (*keyStart != '=') && (*keyStart != ':')) keyStart++;
+						if (keyStart >= varStrEnd) break;
+					}
+					else if (idn == 'H')
+					{
+						memcpy(stringKey, NASZ("name=\""));				// size is 6
+						stringKeyLen = varnext - varnow - 3;
+						memcpy(&stringKey[6], varnow+3, stringKeyLen);
+						stringKey[stringKeyLen + 6] = '"';
+						keyStart = memstr(varStrBuffer, varBuffer->NProcessSize, stringKey, stringKeyLen + 7);
+						if (!keyStart) break;
+
+						keyStart += (stringKeyLen + 7);
+						keyStart = memstr (keyStart, varBuffer->NProcessSize, NASZ("value="));				// lazy way set size
+						if (keyStart >= varStrEnd) break;
+					}
+					else break;
+
+					oldStringStart = (char*)memchr(keyStart, '"', varStrEnd - keyStart);
+					if (!oldStringStart) break;
+					oldStringStart++;
+					stringEnd = (char*)memchr(oldStringStart, '"', varStrEnd - oldStringStart);
+					if (!stringEnd) break;
+					oldStringLen = stringEnd - oldStringStart;
+
+					varstart = varnext;
+					continue;
+				}
+				else break;
+			}
 			else if (idn=='x') indexnumber = ASCII_HEX[firstn] * 16 + ASCII_HEX[secondn];
 			else if (idn=='d') indexnumber = ASCII_DEC[firstn] * 10 + ASCII_DEC[secondn];
 			else if (idn=='X') indexnumber = ASCII_HEX[firstn] * 16 + ASCII_HEX[secondn] + POST_PARAMETER_START;
@@ -2057,6 +2451,18 @@ long ProcessOneVar(CContextItem* mContext, ContentPad* hInfo, char* &mStart, cha
 			{
 				indexnumber = ASCII_DEC[firstn] * 10 + ASCII_DEC[secondn];
 				trantoGB = TRUE;
+			}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//	add for base64 Dec. 02 '14
+			else if (idn=='b')
+			{
+				indexnumber = ASCII_DEC[firstn] * 10 + ASCII_DEC[secondn];
+				encode64 = TRUE;
+			}
+			else if (idn=='B')
+			{
+				indexnumber = ASCII_DEC[firstn] * 10 + ASCII_DEC[secondn];
+				decode64 = TRUE;
 			}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			else if (idn=='s')				//	remove all blank for begin and end
@@ -2075,16 +2481,6 @@ long ProcessOneVar(CContextItem* mContext, ContentPad* hInfo, char* &mStart, cha
 				translateSpace = TRUE;
 				translateHtml = TRUE;
 			}
-
-			else if (idn=='v')
-			{
-				indexnumber = ASCII_DEC[firstn] * 10 + ASCII_DEC[secondn];
-				Myitoa((long)(resultPad->resultKey[indexnumber]), mStart);		//	force translateSpace
-				varstart = varnow + 4;
-				continue;
-// 				indexnumber = VALUE_NOT_FOUND;									//	continue do following
-			}
-
 //	add in Apr. 14 '14 for url tran, change char to %XX
 			else if (idn=='u')
 			{
@@ -2092,6 +2488,57 @@ long ProcessOneVar(CContextItem* mContext, ContentPad* hInfo, char* &mStart, cha
 				translatePost = TRUE;
 			}
 //	add in Apr. 14 '14 for url tran
+			else if (idn=='v')				// %v could not use %r	????
+			{
+				if (otherPad)								// should add these five line? try in Dec. 02 '14
+				{
+					resultPad = otherPad;
+					otherPad = 0;
+				}											// maybe ok should do more for %r %V/%v together
+				else resultPad = hInfo;						//
+
+				indexnumber = ASCII_DEC[firstn] * 10 + ASCII_DEC[secondn];
+				Myitoa((long)(resultPad->resultKey[indexnumber]), mStart);		//	force translateSpace
+				varstart = varnow + 4;
+				continue;
+// 				indexnumber = VALUE_NOT_FOUND;									//	continue do following
+			}
+			else if (idn=='K')
+			{
+				indexnumber = ASCII_DEC[firstn] * 10 + ASCII_DEC[secondn];
+				tranCondition = TRUE;
+			}
+			else if (idn=='f')
+			{
+				indexnumber = ASCII_DEC[firstn] * 10 + ASCII_DEC[secondn];
+				formatForm = TRUE;
+			}
+			else if (idn==';')
+			{
+				indexnumber = ASCII_DEC[firstn] * 10 + ASCII_DEC[secondn];
+				trantoHtml = TRUE;
+			}
+			else if (idn=='m')
+			{
+				indexnumber = ASCII_DEC[firstn] * 10 + ASCII_DEC[secondn];
+				trantoMD5 = TRUE;
+			}
+			else if (idn=='F')
+			{
+				indexnumber = ASCII_DEC[firstn] * 10 + ASCII_DEC[secondn];
+				tranStupid = TRUE;
+			}
+			else if (idn=='P')
+			{
+				indexnumber = ASCII_DEC[firstn] * 10 + ASCII_DEC[secondn];
+				tranPath = TRUE;
+			}
+			else if (idn=='p')
+			{
+				indexnumber = ASCII_DEC[firstn] * 10 + ASCII_DEC[secondn];
+				getPath = TRUE;
+			}
+
 
 #ifdef	QRCODE_FUNCTION
 			else if (idn='Q')
@@ -2117,18 +2564,33 @@ long ProcessOneVar(CContextItem* mContext, ContentPad* hInfo, char* &mStart, cha
 				}
 				else resultPad = hInfo;
 
-long aheadblank = 0, tailblank = 0;
-char* isblank = resultPad->resultKey[indexnumber];
+// the two add for var use for wafascript   // %v:xx% format
+				if (oldStringStart)
+				{
+					stringStart = oldStringStart;
+					stringLen = oldStringLen;
+					oldStringStart = 0;
+					oldStringLen = 0;				
+				}
+				else
+				{
+					stringStart = resultPad->resultKey[indexnumber];
+					stringLen = resultPad->getLength[indexnumber];
+				}
 
-				if (resultPad->resultKey[indexnumber])
+
+long aheadblank = 0, tailblank = 0;
+char* isblank = stringStart;
+
+				if (stringStart || tranCondition)			//	tranCondition for %k:xx:yy,  while xx is null, should return 1
 				{
 //	add in Apr. 14 '14 for url tran, change char to %XX
 					if (translatePost)
 					{
-						tranpoint = resultPad->resultKey[indexnumber];
-						for (i=0; i<resultPad->getLength[indexnumber]; i++)
+						tranpoint = stringStart;
+						for (i=0; i<stringLen; i++)
 						{
-							if (TRAN_POST[(unsigned char)(*isblank)])
+							if (TRAN_POST[(unsigned char)(*isblank)])		//	may change to TRAN_POST_NEW
 							{
 								*mStart++ = '%';
 								Myitoh((unsigned char)(*isblank), mStart);			//	network order HEX format
@@ -2140,26 +2602,26 @@ char* isblank = resultPad->resultKey[indexnumber];
 //	add in Apr. 14 '14 for url tran
 					else if (translateSpace)
 					{
-						for (i=0; i<resultPad->getLength[indexnumber]; i++)
+						for (i=0; i<stringLen; i++)
 						{
 							if ((unsigned char)(*isblank) <= 0x20) isblank++;			//	not for display
 							else break;
 						}
-						aheadblank = isblank - resultPad->resultKey[indexnumber];
+						aheadblank = isblank - stringStart;
 						
-						isblank = resultPad->resultKey[indexnumber] + resultPad->getLength[indexnumber];
-						for (i=0; i<resultPad->getLength[indexnumber]; i++)
+						isblank = stringStart + stringLen;
+						for (i=0; i<stringLen; i++)
 						{
 							if ((unsigned char)(*(isblank-1)) <= 0x20) isblank--;			//	not for display
 							else break;
 						}
-						tailblank = resultPad->resultKey[indexnumber] + resultPad->getLength[indexnumber] - isblank;
+						tailblank = stringStart + stringLen - isblank;
 
-						tranpoint = resultPad->resultKey[indexnumber] + aheadblank;
+						tranpoint = stringStart + aheadblank;
 long inlable = 0;
 char thischar;
 long lthischar;
-						for (i=0; i<resultPad->getLength[indexnumber] - aheadblank - tailblank; i++)
+						for (i=0; i<stringLen - aheadblank - tailblank; i++)
 						{
 							thischar = *tranpoint;
 							tranpoint++;
@@ -2196,8 +2658,9 @@ long lthischar;
 									continue;
 								}
 							}
-// Add translate '$' format like {aa$bb$ccc}
-							if ((thischar=='"') || (thischar=='\\') || (thischar=='/') || (thischar=='$')) *mStart++ = '\\';	//	for JSON translateSpace
+// Add translate '$' format like {aa$bb$ccc}	// remove / and $ translate		//	Dec. 27 '14
+//							if ((thischar=='"') || (thischar=='\\') || (thischar=='/') || (thischar=='$')) *mStart++ = '\\';	//	for JSON translateSpace
+							if ((thischar=='"') || (thischar=='\\')) *mStart++ = '\\';	//	
 							if (unsigned char(thischar) >= 0x20) *mStart++ = thischar;
 						}
 					}
@@ -2206,38 +2669,120 @@ long lthischar;
 					else if (trantoGB)
 					{
 						copysize = 0;
-						UTF8toGB2312((PUCHAR)resultPad->resultKey[indexnumber], resultPad->getLength[indexnumber], (PUCHAR)mStart, copysize);
+						UTF8toGB2312((PUCHAR)stringStart, stringLen, (PUCHAR)mStart, copysize);
 						mStart += copysize;
 					}
 					else if (trantoUTF)
 					{
 						copysize = 0;
-						GB2312toUTF8((PUCHAR)resultPad->resultKey[indexnumber], resultPad->getLength[indexnumber], (PUCHAR)mStart, copysize);
+						GB2312toUTF8((PUCHAR)stringStart, stringLen, (PUCHAR)mStart, copysize);
 						mStart += copysize;
 					}
-					else if (removeCR)			// add rmove in Nov 18 '14
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Add for encode and decode base64, reuse copysize		//	add Dec. 02 '14
+					else if (encode64)
 					{
-						tranpoint = resultPad->resultKey[indexnumber];
-						for (i=0; i<resultPad->getLength[indexnumber]; i++)
+						copysize = 0;
+						Base64Encode((PUCHAR)stringStart, stringLen, (PUCHAR)mStart, copysize);
+						mStart += copysize;
+					}
+					else if (decode64)
+					{
+						copysize = 0;
+						Base64Decode((PUCHAR)stringStart, stringLen, (PUCHAR)mStart, copysize);
+						mStart += copysize;
+					}
+					else if (trantoMD5)
+					{
+						copysize = 0;
+						MD5Encode((PUCHAR)stringStart, stringLen, (PUCHAR)mStart, copysize);
+						mStart += copysize;
+					}
+					else if (tranStupid)
+					{
+						copysize = 0;
+						TranEscape((PUCHAR)stringStart, stringLen, (PUCHAR)mStart, copysize, 1);
+						mStart += copysize;
+					}
+					else if (tranCondition)
+					{
+						kplace = ASCII_DEC[*(varnow+5)] * 10 + ASCII_DEC[*(varnow+6)];
+						valstart = resultPad->resultKey[kplace];
+						vallen = resultPad->getLength[kplace];
+
+						if (ParserCITIC((PUCHAR)stringStart, stringLen, valstart, valstart + vallen) == 1) *mStart = '1';
+						else *mStart = '0';
+						mStart ++;
+						varnow += 3;			// for format %Kxx:xx
+					}
+					else if (formatForm)
+					{
+						copysize = 0;
+						kplace = ASCII_DEC[*(varnow+5)] * 10 + ASCII_DEC[*(varnow+6)];
+						valstart = resultPad->resultKey[kplace];
+						vallen = resultPad->getLength[kplace];
+
+						tempbuffer = mContext->PApplication->GetApplicationBuffer();
+						if (!tempbuffer) break;
+
+						FormatFormCITIC((PUCHAR)stringStart, stringLen, valstart, valstart + vallen, (PUCHAR)mStart, copysize, tempbuffer);
+						mContext->PApplication->FreeApplicationBuffer(tempbuffer);
+
+						mStart += copysize;
+						varnow += 3;			// for format %Kxx:xx
+					}
+					else if (getPath)
+					{
+						copysize = 0;
+						GetFilePath((PUCHAR)stringStart, stringLen, (PUCHAR)mStart, copysize);
+						mStart += copysize;
+					}
+					else if (tranPath)
+					{
+						copysize = 0;
+						kplace = ASCII_DEC[*(varnow+5)] * 10 + ASCII_DEC[*(varnow+6)];
+						valstart = resultPad->resultKey[kplace];
+						vallen = resultPad->getLength[kplace];
+
+						TranslatePath((PUCHAR)stringStart, stringLen, valstart, valstart + vallen, (PUCHAR)mStart, copysize);
+
+						mStart += copysize;
+						varnow += 3;			// for format %Kxx:xx
+					}
+					else if (removeCR)			// add remove in Nov 18 '14
+					{
+						tranpoint = stringStart;
+						for (i=0; i<stringLen; i++)
 						{
 							if ((*isblank == 0xd) || (*isblank == 0xa)) isblank++;
 							else *mStart++ = *isblank++;
 						}
 
 					}
+					else if (trantoHtml)
+					{
+						tranpoint = stringStart;
+						for (i=0; i<stringLen; i++)
+						{
+							if (*isblank == '"') {isblank++; *((unsigned long*)mStart) = '&'+('a'<<8)+('m'<<16)+('p'<<24); mStart+=4; *mStart++ = ';'; }
+							if (*isblank == '<') {isblank++; *((unsigned long*)mStart) = '&'+('l'<<8)+('t'<<16)+(';'<<24); mStart+=4; }
+							if (*isblank == '>') {isblank++; *((unsigned long*)mStart) = '&'+('g'<<8)+('t'<<16)+(';'<<24); mStart+=4; }
+							else *mStart++ = *isblank++;
+						}
+					}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef	QRCODE_FUNCTION
 					else if (tranQRCode)
 					{
 						copysize = 0;
-						QRCodeTranslate((PUCHAR)resultPad->resultKey[indexnumber], resultPad->getLength[indexnumber], (PUCHAR)mStart, copysize);
+						QRCodeTranslate((PUCHAR)stringStart, stringLen, (PUCHAR)mStart, copysize);
 						mStart += copysize;
 					}
 #endif	QRCODE_FUNCTION
 					else 
 					{
-						memcpy(mStart, resultPad->resultKey[indexnumber], resultPad->getLength[indexnumber]);		// normally, mem copy is enough
-						mStart += resultPad->getLength[indexnumber];
+						memcpy(mStart, stringStart, stringLen);		// normally, mem copy is enough
+						mStart += stringLen;
 					}
 				}
 			}
@@ -2371,6 +2916,7 @@ long PrepareDefine(CContextItem* mContext, CListItem* mBuffer, ContentPad* pad, 
 // 		*pConcurrency = CONCURRENCY_GOON;	//	still process define, not all request send.		//	Apr. 26 '14
 		if (wafaEnd) wafaEnd += sizeof(WAFA_DEFINE_END) - 1;		// add Sept 12 '13
 //		ret = ProcessWafaDefineRefer(mContext, mBuffer, wafaStart, wafaEnd, pad->checkStart);
+
 		ret = ProcessWafaDefineRefer(mContext, mBuffer, pad, wafaStart, wafaEnd);
 
 		ret_err = 0x50;

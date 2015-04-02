@@ -439,7 +439,7 @@ long AnalysisHttpURL(CContextItem* mContext, CListItem* mBuffer, long size)
 		urlinfo->sendTogether = FALSE;
 
 		ret_err = 0x50;
-		if ( !strncmp(urlinfo->getKeepalive, "Keep-Alive", NORMAL_CHAR)) mContext->ListFlag |= FLAG_KEEPALIVE;
+//		if ( !strncmp(urlinfo->getKeepalive, "Keep-Alive", NORMAL_CHAR)) mContext->ListFlag |= FLAG_KEEPALIVE;			// I should close client, no keep-alive.	// Nov. 24 '14
 
 		if (urlinfo->getLength[6] != VALUE_NOT_FOUND)
 		{
